@@ -1,5 +1,4 @@
-// Generated from C:/Users/cumal/dev/asd/icss/startcode/src/main/java/nl/han/ica/icss\ICSS.g4 by ANTLR 4.7.2
-package nl.han.ica.icss;
+// Generated from C:/Users/cumal/dev/asd/app-programming-language/src/main/antlr4/nl/han/ica/icss/parser\ICSS.g4 by ANTLR 4.7.2
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -17,17 +16,29 @@ public interface ICSSVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStylesheet(ICSSParser.StylesheetContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#children}.
+	 * Visit a parse tree produced by {@link ICSSParser#variables}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitChildren(ICSSParser.ChildrenContext ctx);
+	T visitVariables(ICSSParser.VariablesContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#child}.
+	 * Visit a parse tree produced by {@link ICSSParser#variable}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitChild(ICSSParser.ChildContext ctx);
+	T visitVariable(ICSSParser.VariableContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#selectors}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSelectors(ICSSParser.SelectorsContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#selector}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSelector(ICSSParser.SelectorContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ICSSParser#properties}.
 	 * @param ctx the parse tree

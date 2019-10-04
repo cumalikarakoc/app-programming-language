@@ -1,5 +1,4 @@
-// Generated from C:/Users/cumal/dev/asd/icss/startcode/src/main/java/nl/han/ica/icss\ICSS.g4 by ANTLR 4.7.2
-package nl.han.ica.icss;
+// Generated from C:/Users/cumal/dev/asd/app-programming-language/src/main/antlr4/nl/han/ica/icss/parser\ICSS.g4 by ANTLR 4.7.2
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -28,25 +27,49 @@ public class ICSSBaseListener implements ICSSListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterChildren(ICSSParser.ChildrenContext ctx) { }
+	@Override public void enterVariables(ICSSParser.VariablesContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitChildren(ICSSParser.ChildrenContext ctx) { }
+	@Override public void exitVariables(ICSSParser.VariablesContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterChild(ICSSParser.ChildContext ctx) { }
+	@Override public void enterVariable(ICSSParser.VariableContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitChild(ICSSParser.ChildContext ctx) { }
+	@Override public void exitVariable(ICSSParser.VariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSelectors(ICSSParser.SelectorsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSelectors(ICSSParser.SelectorsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSelector(ICSSParser.SelectorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSelector(ICSSParser.SelectorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

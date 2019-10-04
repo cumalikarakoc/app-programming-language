@@ -1,5 +1,4 @@
-// Generated from C:/Users/cumal/dev/asd/icss/startcode/src/main/java/nl/han/ica/icss\ICSS.g4 by ANTLR 4.7.2
-package nl.han.ica.icss;
+// Generated from C:/Users/cumal/dev/asd/app-programming-language/src/main/antlr4/nl/han/ica/icss/parser\ICSS.g4 by ANTLR 4.7.2
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -18,25 +17,45 @@ public interface ICSSListener extends ParseTreeListener {
 	 */
 	void exitStylesheet(ICSSParser.StylesheetContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ICSSParser#children}.
+	 * Enter a parse tree produced by {@link ICSSParser#variables}.
 	 * @param ctx the parse tree
 	 */
-	void enterChildren(ICSSParser.ChildrenContext ctx);
+	void enterVariables(ICSSParser.VariablesContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ICSSParser#children}.
+	 * Exit a parse tree produced by {@link ICSSParser#variables}.
 	 * @param ctx the parse tree
 	 */
-	void exitChildren(ICSSParser.ChildrenContext ctx);
+	void exitVariables(ICSSParser.VariablesContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ICSSParser#child}.
+	 * Enter a parse tree produced by {@link ICSSParser#variable}.
 	 * @param ctx the parse tree
 	 */
-	void enterChild(ICSSParser.ChildContext ctx);
+	void enterVariable(ICSSParser.VariableContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ICSSParser#child}.
+	 * Exit a parse tree produced by {@link ICSSParser#variable}.
 	 * @param ctx the parse tree
 	 */
-	void exitChild(ICSSParser.ChildContext ctx);
+	void exitVariable(ICSSParser.VariableContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ICSSParser#selectors}.
+	 * @param ctx the parse tree
+	 */
+	void enterSelectors(ICSSParser.SelectorsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ICSSParser#selectors}.
+	 * @param ctx the parse tree
+	 */
+	void exitSelectors(ICSSParser.SelectorsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ICSSParser#selector}.
+	 * @param ctx the parse tree
+	 */
+	void enterSelector(ICSSParser.SelectorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ICSSParser#selector}.
+	 * @param ctx the parse tree
+	 */
+	void exitSelector(ICSSParser.SelectorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ICSSParser#properties}.
 	 * @param ctx the parse tree
