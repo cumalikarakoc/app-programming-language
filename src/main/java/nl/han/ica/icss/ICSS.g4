@@ -40,4 +40,9 @@ ASSIGNMENT_OPERATOR: ':=';
 
 //--- PARSER: ---
 
-stylesheet: EOF;
+stylesheet: children+;
+children: child+;
+child: (ID_IDENT | CLASS_IDENT | LOWER_IDENT) OPEN_BRACE properties+ CLOSE_BRACE;
+properties: property+;
+property: LOWER_IDENT COLON (COLOR | PIXELSIZE | PERCENTAGE) SEMICOLON;
+

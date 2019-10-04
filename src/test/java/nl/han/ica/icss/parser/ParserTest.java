@@ -1,5 +1,7 @@
 package nl.han.ica.icss.parser;
 
+import nl.han.ica.icss.ICSSLexer;
+import nl.han.ica.icss.ICSSParser;
 import nl.han.ica.icss.ast.AST;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
