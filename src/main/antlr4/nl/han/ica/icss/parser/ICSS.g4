@@ -40,10 +40,13 @@ ASSIGNMENT_OPERATOR: ':=';
 
 //--- PARSER: ---
 
-stylesheet: variables+ selectors+;
-variables: variable+;
-variable: CAPITAL_IDENT ASSIGNMENT_OPERATOR (COLOR | PIXELSIZE | PERCENTAGE | TRUE | FALSE) SEMICOLON;
-selectors: selector+;
-selector: (ID_IDENT | CLASS_IDENT | LOWER_IDENT) OPEN_BRACE properties+ CLOSE_BRACE;
-properties: property+;
-property: LOWER_IDENT COLON (COLOR | PIXELSIZE | PERCENTAGE | CAPITAL_IDENT) SEMICOLON;
+stylesheet: variables body;
+variables: varAssignment+;
+varAssignment: varName ASSIGNMENT_OPERATOR literal SEMICOLON;
+varName: CAPITAL_IDENT;
+body: selector+;
+selector: (ID_IDENT | CLASS_IDENT | LOWER_IDENT) OPEN_BRACE declarations CLOSE_BRACE;
+declarations: declaration+;
+declaration: property COLON (literal | varName) SEMICOLON;
+property:LOWER_IDENT;
+literal: (COLOR | PIXELSIZE | PERCENTAGE | TRUE | FALSE);

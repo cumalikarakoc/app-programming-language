@@ -22,17 +22,23 @@ public interface ICSSVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVariables(ICSSParser.VariablesContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#variable}.
+	 * Visit a parse tree produced by {@link ICSSParser#varAssignment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVariable(ICSSParser.VariableContext ctx);
+	T visitVarAssignment(ICSSParser.VarAssignmentContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#selectors}.
+	 * Visit a parse tree produced by {@link ICSSParser#varName}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSelectors(ICSSParser.SelectorsContext ctx);
+	T visitVarName(ICSSParser.VarNameContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#body}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBody(ICSSParser.BodyContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ICSSParser#selector}.
 	 * @param ctx the parse tree
@@ -40,15 +46,27 @@ public interface ICSSVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSelector(ICSSParser.SelectorContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#properties}.
+	 * Visit a parse tree produced by {@link ICSSParser#declarations}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitProperties(ICSSParser.PropertiesContext ctx);
+	T visitDeclarations(ICSSParser.DeclarationsContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#declaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDeclaration(ICSSParser.DeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ICSSParser#property}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitProperty(ICSSParser.PropertyContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link ICSSParser#literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLiteral(ICSSParser.LiteralContext ctx);
 }
