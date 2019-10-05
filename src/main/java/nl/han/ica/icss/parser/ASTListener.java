@@ -1,17 +1,15 @@
 package nl.han.ica.icss.parser;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
-
 import nl.han.ica.icss.ast.*;
-import nl.han.ica.icss.ast.literals.BoolLiteral;
-import nl.han.ica.icss.ast.literals.ColorLiteral;
-import nl.han.ica.icss.ast.literals.PercentageLiteral;
-import nl.han.ica.icss.ast.literals.PixelLiteral;
+import nl.han.ica.icss.ast.literals.*;
+import nl.han.ica.icss.ast.operations.AddOperation;
+import nl.han.ica.icss.ast.operations.MultiplyOperation;
+import nl.han.ica.icss.ast.operations.SubtractOperation;
 import nl.han.ica.icss.ast.selectors.ClassSelector;
 import nl.han.ica.icss.ast.selectors.IdSelector;
 import nl.han.ica.icss.ast.selectors.TagSelector;
+
 
 /**
  * This class extracts the ICSS Abstract Syntax Tree from the Antlr Parse tree.
@@ -24,6 +22,8 @@ public class ASTListener extends ICSSBaseListener {
     //Use this to keep track of the parent nodes when recursively traversing the ast
     private Stack<ASTNode> currentContainer;
 
+    private Stack<Expression> expressions = new Stack<>();
+
     public ASTListener() {
         ast = new AST();
         currentContainer = new Stack<>();
@@ -33,10 +33,6 @@ public class ASTListener extends ICSSBaseListener {
         return ast;
     }
 
-    @Override
-    public void enterStylesheet(ICSSParser.StylesheetContext ctx) {
-        currentContainer.push(new Stylesheet());
-    }
 
     @Override
     public void enterVarAssignment(ICSSParser.VarAssignmentContext ctx) {
@@ -44,9 +40,7 @@ public class ASTListener extends ICSSBaseListener {
         assignment.addChild(new VariableReference(ctx.varName().CAPITAL_IDENT().toString()));
         assignment.addChild(getCorrespondingLiteral(ctx.literal()));
         ast.root.addChild(assignment);
-        currentContainer.peek().addChild(assignment);
     }
-
 
     @Override
     public void enterSelector(ICSSParser.SelectorContext ctx) {
@@ -74,14 +68,60 @@ public class ASTListener extends ICSSBaseListener {
         Declaration declaration = new Declaration();
         currentContainer.peek().addChild(declaration);
         currentContainer.push(declaration);
-        currentContainer.peek().addChild(new PropertyName(ctx.property().LOWER_IDENT().toString()));
-        if(ctx.varName() != null){
-            currentContainer.peek().addChild(new VariableReference(ctx.varName().CAPITAL_IDENT().toString()));
+    }
 
-        }else{
-            currentContainer.peek().addChild(getCorrespondingLiteral(ctx.literal()));
+    @Override
+    public void exitDeclaration(ICSSParser.DeclarationContext ctx) {
+        currentContainer.pop();
+        expressions.clear();
+    }
 
+    @Override
+    public void enterProperty(ICSSParser.PropertyContext ctx) {
+        currentContainer.peek().addChild(new PropertyName(ctx.LOWER_IDENT().toString()));
+    }
+
+    @Override
+    public void enterExpression(ICSSParser.ExpressionContext ctx) {
+        if (ctx.varName() != null) {
+            VariableReference var = new VariableReference(ctx.varName().CAPITAL_IDENT().toString());
+            currentContainer.peek().addChild(var);
+            expressions.push(var);
         }
+        if (getCorrespondingLiteral(ctx.literal()) != null) {
+            Literal literal = getCorrespondingLiteral(ctx.literal());
+            currentContainer.peek().addChild(literal);
+            expressions.push(literal);
+        }
+    }
+
+    @Override
+    public void enterOperation(ICSSParser.OperationContext ctx) {
+        Operation operation = getCorrespondingOperation(ctx);
+        if (expressions.peek() != null) {
+            operation.addChild(expressions.pop());
+        }
+        if (currentContainer.peek() instanceof Operation) {
+            ((Operation) currentContainer.peek()).rhs = null;
+        }
+        currentContainer.peek().addChild(operation);
+        currentContainer.push(operation);
+    }
+
+    private Operation getCorrespondingOperation(ICSSParser.OperationContext operation) {
+        if (operation == null) {
+            return null;
+        }
+        if (operation.MUL() != null) {
+            return new MultiplyOperation();
+        }
+        if (operation.MIN() != null) {
+            return new SubtractOperation();
+        }
+        if (operation.PLUS() != null) {
+            return new AddOperation();
+        }
+        return null;
     }
 
     private Literal getCorrespondingLiteral(ICSSParser.LiteralContext literal) {
@@ -103,12 +143,9 @@ public class ASTListener extends ICSSBaseListener {
         if (literal.FALSE() != null) {
             return new BoolLiteral(literal.FALSE().toString());
         }
+        if (literal.SCALAR() != null) {
+            return new ScalarLiteral(literal.SCALAR().toString());
+        }
         return null;
     }
-
-    @Override
-    public void exitProperty(ICSSParser.PropertyContext ctx) {
-        currentContainer.pop();
-    }
-
 }

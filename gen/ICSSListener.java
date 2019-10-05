@@ -87,6 +87,36 @@ public interface ICSSListener extends ParseTreeListener {
 	 */
 	void exitDeclaration(ICSSParser.DeclarationContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ICSSParser#expressions}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpressions(ICSSParser.ExpressionsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ICSSParser#expressions}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpressions(ICSSParser.ExpressionsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ICSSParser#expression}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpression(ICSSParser.ExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ICSSParser#expression}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpression(ICSSParser.ExpressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link ICSSParser#operation}.
+	 * @param ctx the parse tree
+	 */
+	void enterOperation(ICSSParser.OperationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ICSSParser#operation}.
+	 * @param ctx the parse tree
+	 */
+	void exitOperation(ICSSParser.OperationContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ICSSParser#property}.
 	 * @param ctx the parse tree
 	 */
