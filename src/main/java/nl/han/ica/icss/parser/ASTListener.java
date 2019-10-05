@@ -1,5 +1,6 @@
 package nl.han.ica.icss.parser;
 
+import java.util.ArrayList;
 import java.util.Stack;
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.*;
@@ -65,9 +66,15 @@ public class ASTListener extends ICSSBaseListener {
 
     @Override
     public void enterDeclaration(ICSSParser.DeclarationContext ctx) {
-        Declaration declaration = new Declaration();
-        currentContainer.peek().addChild(declaration);
-        currentContainer.push(declaration);
+        if (ctx.ifClause() != null) {
+            IfClause ifClause = new IfClause(new VariableReference(ctx.ifClause().varName().CAPITAL_IDENT().toString()), new ArrayList<>());
+            currentContainer.peek().addChild(ifClause);
+            currentContainer.push(ifClause);
+        }else{
+            Declaration declaration = new Declaration();
+            currentContainer.peek().addChild(declaration);
+            currentContainer.push(declaration);
+        }
     }
 
     @Override
