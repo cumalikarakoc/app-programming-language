@@ -3,6 +3,9 @@ package nl.han.ica.icss.parser;
 import java.util.Stack;
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.*;
+import nl.han.ica.icss.ast.operations.AddOperation;
+import nl.han.ica.icss.ast.operations.MultiplyOperation;
+import nl.han.ica.icss.ast.operations.SubtractOperation;
 import nl.han.ica.icss.ast.selectors.ClassSelector;
 import nl.han.ica.icss.ast.selectors.IdSelector;
 import nl.han.ica.icss.ast.selectors.TagSelector;
@@ -117,5 +120,38 @@ public class ASTListener extends ICSSBaseListener {
     @Override
     public void enterPropName(ICSSParser.PropNameContext ctx) {
         currentContainer.peek().addChild(new PropertyName(ctx.LOWER_IDENT().toString()));
+    }
+
+    @Override
+    public void enterAddOperation(ICSSParser.AddOperationContext ctx) {
+        AddOperation addOperation = new AddOperation();
+        currentContainer.peek().addChild(addOperation);
+        currentContainer.push(addOperation);
+    }
+
+    @Override
+    public void enterMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) {
+        MultiplyOperation multiplyOperation = new MultiplyOperation();
+        currentContainer.peek().addChild(multiplyOperation);
+        currentContainer.push(multiplyOperation);
+    }
+
+    @Override
+    public void enterSubtractOperation(ICSSParser.SubtractOperationContext ctx) {
+        SubtractOperation subtractOperation = new SubtractOperation();
+        currentContainer.peek().addChild(subtractOperation);
+        currentContainer.push(subtractOperation);
+    }
+
+    @Override
+    public void exitOperation(ICSSParser.OperationContext ctx) {
+        currentContainer.pop();
+    }
+
+    @Override
+    public void enterIfClause(ICSSParser.IfClauseContext ctx) {
+        IfClause ifClause = new IfClause();
+        currentContainer.peek().addChild(ifClause);
+        currentContainer.push(ifClause);
     }
 }

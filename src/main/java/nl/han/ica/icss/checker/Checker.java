@@ -1,54 +1,47 @@
 package nl.han.ica.icss.checker;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.types.*;
 
 public class Checker {
 
-    private LinkedList<HashMap<String, ExpressionType>> variableTypes;
+    private HashMap<String, ExpressionType> variableTypes = new HashMap<>();
 
     public void check(AST ast) {
-        variableTypes = new LinkedList<>();
-        variableTypes.add((HashMap<String, ExpressionType>) variables(ast));
-        for (ASTNode node : ast.root.body) {
-            if (node instanceof VariableReference){
-                if(!variableTypes.getLast().containsKey(((VariableReference) node).name)){
-                    node.setError(new SemanticError("Variable is not defined").toString());
+        setVariableTypes(ast);
+        for (ASTNode declaration : ast.getDeclarations()) {
+            Expression expression = ((Declaration) declaration).expression;
+            if (expression instanceof VariableReference) {
+                if (!variableTypes.containsKey(((VariableReference) expression).name)) {
+                    expression.setError("Variable " + ((VariableReference) expression).name + " is not defined.");
                 }
             }
         }
     }
 
-    private Map<String, ExpressionType> variables(AST ast) {
-        Map<String, ExpressionType> map = new HashMap<>();
-        for (ASTNode node : ast.root.body) {
-            if (node instanceof VariableAssignment) {
-                map.put(((VariableAssignment) node).name.name, getExpressionType(node));
-            }
+    private void setVariableTypes(AST ast) {
+        for (ASTNode node : ast.getVariableAssignments()) {
+            variableTypes.put(((VariableAssignment) node).name.name, getExpressionType(((VariableAssignment) node).expression));
         }
-        return map;
     }
 
 
-    private ExpressionType getExpressionType(ASTNode expression) {
-        if (expression instanceof BoolLiteral) {
+    private ExpressionType getExpressionType(ASTNode node) {
+        if (node instanceof BoolLiteral) {
             return ExpressionType.BOOL;
         }
-        if (expression instanceof ColorLiteral) {
+        if (node instanceof ColorLiteral) {
             return ExpressionType.COLOR;
         }
-        if (expression instanceof PercentageLiteral) {
+        if (node instanceof PercentageLiteral) {
             return ExpressionType.PERCENTAGE;
         }
-        if (expression instanceof PixelLiteral) {
+        if (node instanceof PixelLiteral) {
             return ExpressionType.PIXEL;
         }
-        if (expression instanceof ScalarLiteral) {
+        if (node instanceof ScalarLiteral) {
             return ExpressionType.SCALAR;
         }
         return ExpressionType.UNDEFINED;
