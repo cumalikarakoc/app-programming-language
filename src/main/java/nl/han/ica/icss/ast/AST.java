@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public class AST {
     public static final String VAR_ASSIGNMENTS = "varAssignments";
-    public static final String DECLARATIONS = "styleRules";
+    public static final String STYLE_RULES = "styleRules";
     //The root of the tree
     public Stylesheet root;
 
@@ -44,7 +44,7 @@ public class AST {
     }
 
     public List<ASTNode> getDeclarations() {
-        return extractGivenChildGroup(DECLARATIONS);
+        return extractGivenChildGroup(STYLE_RULES);
     }
 
     private List<ASTNode> extractGivenChildGroup(String childGroup) {
@@ -54,9 +54,9 @@ public class AST {
                 if (node instanceof VariableAssignment) {
                     nodes.add(node);
                 }
-            } else if (childGroup.equals(DECLARATIONS)) {
+            } else if (childGroup.equals(STYLE_RULES)) {
                 if (node instanceof Stylerule) {
-                    nodes = (((Stylerule) node).body);
+                    nodes.addAll(((Stylerule) node).body);
                 }
             }
 
