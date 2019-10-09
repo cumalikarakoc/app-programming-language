@@ -27,7 +27,7 @@ import java.util.List;
 @SuppressWarnings("restriction")
 public class MainGui extends Application {
 
-    private final static String title = "ICSS Tool September 2018";
+    private final static String title = "ICSS Tool September 2019";
     //Example files (for menu)
     private final static List<String> examples = Arrays.asList("level0.icss","level1.icss","level2.icss","level3.icss");
 
@@ -193,6 +193,9 @@ public class MainGui extends Application {
         for(String e : pipeline.getErrors()) {
             feedbackPane.addLine(e);
         }
+        if (pipeline.isParsed()) {
+            feedbackPane.addLine("Parsing succeeded");
+        }
         astPane.update(pipeline.getAST());
         updateToolbar();
     }
@@ -216,6 +219,9 @@ public class MainGui extends Application {
        feedbackPane.clear();
        feedbackPane.addLine("Applying transformations...");
        pipeline.transform();
+        if (pipeline.isParsed()) {
+            feedbackPane.addLine("Parsing succeeded");
+        }
        astPane.update(pipeline.getAST());
        updateToolbar();
     }
@@ -223,8 +229,8 @@ public class MainGui extends Application {
     private void generate() {
         feedbackPane.clear();
         feedbackPane.addLine("Generating output...");
-
         outputPane.setText(pipeline.generate());
+        feedbackPane.addLine("Generating succeeded");
         updateToolbar();
     }
 

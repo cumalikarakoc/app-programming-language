@@ -24,7 +24,7 @@ public class Checker {
 
     private void validateDeclaration(ASTNode node) {
         if (node instanceof IfClause) {
-            validateIfClause(((IfClause) node).conditionalExpression, (IfClause) node);
+            validateIfClauseConditions(((IfClause) node).conditionalExpression, (IfClause) node);
         }
         if (node instanceof Declaration) {
             Expression expression = ((Declaration) node).expression;
@@ -63,7 +63,7 @@ public class Checker {
 
     }
 
-    private void validateIfClause(Expression expression, IfClause ifClause) {
+    private void validateIfClauseConditions(Expression expression, IfClause ifClause) {
         if (getExpressionType(expression) != ExpressionType.BOOL) {
             ifClause.conditionalExpression.setError("The condition should be type boolean.");
         }
