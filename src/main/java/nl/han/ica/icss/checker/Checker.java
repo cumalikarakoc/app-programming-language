@@ -40,7 +40,7 @@ public class Checker {
         Operation operation = (Operation) expression;
 
         // check the lhs and rhs recursively because they could be operations as well
-        validateOperands(operation.rhs);
+        validateOperands(operation.lhs);
         validateOperands(operation.rhs);
 
         ExpressionType lhsType = getExpressionType(operation.lhs);
@@ -67,7 +67,6 @@ public class Checker {
         if (getExpressionType(expression) != ExpressionType.BOOL) {
             ifClause.conditionalExpression.setError("The condition should be type boolean.");
         }
-        if (ifClause.body.isEmpty()) return;
 
         for (ASTNode node : ifClause.body) {
             validateDeclaration(node);
