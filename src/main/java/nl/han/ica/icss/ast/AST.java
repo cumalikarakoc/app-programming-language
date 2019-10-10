@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Objects;
 
 public class AST {
-    public static final String VAR_ASSIGNMENTS = "varAssignments";
-    public static final String STYLE_RULES = "styleRules";
+    private static final String VAR_ASSIGNMENTS = "VAR_ASSIGNMENTS";
+    private static final String STYLE_RULES = "STYLE_RULES";
+
     //The root of the tree
     public Stylesheet root;
 
