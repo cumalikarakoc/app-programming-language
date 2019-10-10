@@ -25,9 +25,8 @@ public class Generator {
         StringBuilder sb = new StringBuilder();
         for (ASTNode declaration : stylerule.body) {
             if (declaration instanceof Declaration) {
-                sb.append("\t")
-                        .append(((Declaration) declaration).property.name)
-                        .append(": ")
+                sb.append(((Declaration) declaration).property.name)
+                        .append("\t").append(": ")
                         .append(getLiteralValue(((Declaration) declaration).expression))
                         .append(";").append("\n");
             }
@@ -40,7 +39,7 @@ public class Generator {
             return ((ColorLiteral) expression).value;
         }
         if (expression instanceof PixelLiteral) {
-            return ((PixelLiteral) expression).value + "px";
+            return((PixelLiteral) expression).value + "px";
         }
         if (expression instanceof PercentageLiteral) {
             return ((PercentageLiteral) expression).value + "%";
