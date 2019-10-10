@@ -147,45 +147,41 @@ public interface ICSSListener extends ParseTreeListener {
 	 */
 	void exitPropVal(ICSSParser.PropValContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ICSSParser#operation}.
-	 * @param ctx the parse tree
-	 */
-	void enterOperation(ICSSParser.OperationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ICSSParser#operation}.
-	 * @param ctx the parse tree
-	 */
-	void exitOperation(ICSSParser.OperationContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link ICSSParser#addOperation}.
-	 * @param ctx the parse tree
-	 */
-	void enterAddOperation(ICSSParser.AddOperationContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ICSSParser#addOperation}.
-	 * @param ctx the parse tree
-	 */
-	void exitAddOperation(ICSSParser.AddOperationContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link ICSSParser#multiplyOperation}.
+	 * Enter a parse tree produced by the {@code multiplyOperation}
+	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 */
 	void enterMultiplyOperation(ICSSParser.MultiplyOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ICSSParser#multiplyOperation}.
+	 * Exit a parse tree produced by the {@code multiplyOperation}
+	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 */
 	void exitMultiplyOperation(ICSSParser.MultiplyOperationContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ICSSParser#subtractOperation}.
+	 * Enter a parse tree produced by the {@code addSubtractOperation}
+	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 */
-	void enterSubtractOperation(ICSSParser.SubtractOperationContext ctx);
+	void enterAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ICSSParser#subtractOperation}.
+	 * Exit a parse tree produced by the {@code addSubtractOperation}
+	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 */
-	void exitSubtractOperation(ICSSParser.SubtractOperationContext ctx);
+	void exitAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code literalVarExpression}
+	 * labeled alternative in {@link ICSSParser#operation}.
+	 * @param ctx the parse tree
+	 */
+	void enterLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code literalVarExpression}
+	 * labeled alternative in {@link ICSSParser#operation}.
+	 * @param ctx the parse tree
+	 */
+	void exitLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ICSSParser#expression}.
 	 * @param ctx the parse tree

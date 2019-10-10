@@ -53,11 +53,10 @@ elementSelector: LOWER_IDENT;
 declarations: declaration+ ifClause*;
 declaration: propName COLON propVal SEMICOLON;
 ifClause: IF BOX_BRACKET_OPEN expression BOX_BRACKET_CLOSE OPEN_BRACE declarations CLOSE_BRACE;
-propVal: expression | operation*;
-operation: multiplyOperation | addOperation | subtractOperation;
-addOperation: expression PLUS (expression | operation);
-multiplyOperation: expression MUL (expression | operation);
-subtractOperation: expression MIN (expression | operation);
+propVal: operation;
+operation: operation MUL operation            # multiplyOperation
+       |   operation (PLUS | MIN) operation   # addSubtractOperation
+       |   expression                         # literalVarExpression;
 expression: literal | varName;
 propName:LOWER_IDENT;
 literal: colorLiteral | pixelLiteral | percentageLiteral | boolLiteral | scalarLiteral;

@@ -1,14 +1,12 @@
 package nl.han.ica.icss.transforms;
 
-import com.google.errorprone.annotations.Var;
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.PercentageLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
 import nl.han.ica.icss.ast.literals.ScalarLiteral;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
-
-import javax.naming.OperationNotSupportedException;
+import nl.han.ica.icss.ast.operations.SubtractOperation;
 import java.util.HashMap;
 import java.util.List;
 
@@ -62,6 +60,9 @@ public class EvalExpressions implements Transform {
             Literal res = null;
             if (expression instanceof AddOperation) {
                 res = add(lhs, rhs);
+            }
+            if (expression instanceof SubtractOperation) {
+                res = subtract(lhs, rhs);
             }
             if (expression instanceof MultiplyOperation) {
                 res = multiply(lhs, rhs);

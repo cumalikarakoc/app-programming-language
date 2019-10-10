@@ -94,29 +94,26 @@ public interface ICSSVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPropVal(ICSSParser.PropValContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#operation}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitOperation(ICSSParser.OperationContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ICSSParser#addOperation}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAddOperation(ICSSParser.AddOperationContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link ICSSParser#multiplyOperation}.
+	 * Visit a parse tree produced by the {@code multiplyOperation}
+	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitMultiplyOperation(ICSSParser.MultiplyOperationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ICSSParser#subtractOperation}.
+	 * Visit a parse tree produced by the {@code addSubtractOperation}
+	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSubtractOperation(ICSSParser.SubtractOperationContext ctx);
+	T visitAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code literalVarExpression}
+	 * labeled alternative in {@link ICSSParser#operation}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link ICSSParser#expression}.
 	 * @param ctx the parse tree

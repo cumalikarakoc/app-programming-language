@@ -183,30 +183,6 @@ public class ICSSBaseListener implements ICSSListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOperation(ICSSParser.OperationContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitOperation(ICSSParser.OperationContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAddOperation(ICSSParser.AddOperationContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAddOperation(ICSSParser.AddOperationContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -219,13 +195,25 @@ public class ICSSBaseListener implements ICSSListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterSubtractOperation(ICSSParser.SubtractOperationContext ctx) { }
+	@Override public void enterAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitSubtractOperation(ICSSParser.SubtractOperationContext ctx) { }
+	@Override public void exitAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

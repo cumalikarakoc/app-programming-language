@@ -1,6 +1,7 @@
 package nl.han.ica.icss.parser;
 
 import java.util.Stack;
+
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.operations.AddOperation;
@@ -123,10 +124,23 @@ public class ASTListener extends ICSSBaseListener {
     }
 
     @Override
-    public void enterAddOperation(ICSSParser.AddOperationContext ctx) {
-        AddOperation addOperation = new AddOperation();
-        currentContainer.peek().addChild(addOperation);
-        currentContainer.push(addOperation);
+    public void enterAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx) {
+        Operation operation = null;
+        if (ctx.PLUS() != null) {
+            operation = new AddOperation();
+        } else if (ctx.MIN() != null) {
+            operation = new SubtractOperation();
+        }
+
+        if (operation != null) {
+            currentContainer.peek().addChild(operation);
+            currentContainer.push(operation);
+        }
+    }
+
+    @Override
+    public void exitAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx) {
+        currentContainer.pop();
     }
 
     @Override
@@ -137,14 +151,7 @@ public class ASTListener extends ICSSBaseListener {
     }
 
     @Override
-    public void enterSubtractOperation(ICSSParser.SubtractOperationContext ctx) {
-        SubtractOperation subtractOperation = new SubtractOperation();
-        currentContainer.peek().addChild(subtractOperation);
-        currentContainer.push(subtractOperation);
-    }
-
-    @Override
-    public void exitOperation(ICSSParser.OperationContext ctx) {
+    public void exitMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) {
         currentContainer.pop();
     }
 
