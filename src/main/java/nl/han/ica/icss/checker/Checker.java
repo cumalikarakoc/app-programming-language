@@ -2,6 +2,7 @@ package nl.han.ica.icss.checker;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.*;
@@ -108,7 +109,14 @@ public class Checker {
         }
 
         if (!match) {
-            property.setError("Property " + property.name + " is incompatible with type " + expressionType);
+            StringBuilder sb = new StringBuilder();
+            sb.append("Property ").append(property.name);
+            if (expressionType == null) {
+                sb.append(" may not be null");
+            } else {
+                sb.append(" is incompatible with type ").append(expressionType);
+            }
+            property.setError(sb.toString());
         }
     }
 
