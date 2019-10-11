@@ -2,8 +2,6 @@ package nl.han.ica.icss.checker;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.operations.AddOperation;
@@ -48,17 +46,17 @@ public class Checker {
         ExpressionType rhsType = getExpressionType(operation.rhs);
 
         if (lhsType == ExpressionType.COLOR || rhsType == ExpressionType.COLOR) {
-            operation.setError("An operand may not be type COLOR.");
+            operation.setError("An operand may not be the type COLOR.");
         }
 
         if (operation instanceof AddOperation || operation instanceof SubtractOperation) {
             if (lhsType != rhsType) {
-                operation.setError("The operands should be the same type.");
+                operation.setError("The operands must be the same type.");
             }
         }
         if (operation instanceof MultiplyOperation) {
             if (!(lhsType == ExpressionType.SCALAR || rhsType == ExpressionType.SCALAR)) {
-                operation.setError("One of the operands must be type SCALAR.");
+                operation.setError("One of the operands must be the type SCALAR.");
             }
         }
 
@@ -66,7 +64,7 @@ public class Checker {
 
     private void validateIfClauseConditions(Expression expression, IfClause ifClause) {
         if (getExpressionType(expression) != ExpressionType.BOOL) {
-            ifClause.conditionalExpression.setError("The condition should be type boolean.");
+            ifClause.conditionalExpression.setError("The condition must be the type boolean.");
         }
 
         for (ASTNode node : ifClause.body) {
@@ -87,8 +85,9 @@ public class Checker {
     }
 
     private void setVariableTypes(AST ast) {
-        for (ASTNode node : ast.getVariableAssignments()) {
-            variableTypes.put(((VariableAssignment) node).name.name, mapLiteralToExpressionType(((VariableAssignment) node).expression));
+        List<ASTNode> variableAssignments = ast.getVariableAssignments();
+        for (ASTNode node : variableAssignments) {
+            variableTypes.put(((VariableAssignment) node).name.name, getExpressionType(((VariableAssignment) node).expression));
         }
     }
 

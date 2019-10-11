@@ -42,7 +42,7 @@ ASSIGNMENT_OPERATOR: ':=';
 
 stylesheet:(varAssignments |) styleRules;
 varAssignments: varAssignment+;
-varAssignment: varName ASSIGNMENT_OPERATOR expression SEMICOLON;
+varAssignment: varName ASSIGNMENT_OPERATOR (expression | operation) SEMICOLON;
 varName: CAPITAL_IDENT;
 styleRules: styleRule+;
 styleRule: tagSelector OPEN_BRACE declarations CLOSE_BRACE;
@@ -53,10 +53,10 @@ elementSelector: LOWER_IDENT;
 declarations: declaration+ ifClause*;
 declaration: propName COLON propVal SEMICOLON;
 ifClause: IF BOX_BRACKET_OPEN expression BOX_BRACKET_CLOSE OPEN_BRACE declarations CLOSE_BRACE;
-propVal: operation;
-operation: operation MUL operation            # multiplyOperation
-       |   operation (PLUS | MIN) operation   # addSubtractOperation
-       |   expression                         # literalVarExpression;
+propVal: expression | operation;
+operation: expression                         # literalExpression
+       |   operation MUL operation            # multiplyOperation
+       |   operation (PLUS | MIN) operation   # addSubtractOperation;
 expression: literal | varName;
 propName:LOWER_IDENT;
 literal: colorLiteral | pixelLiteral | percentageLiteral | boolLiteral | scalarLiteral;

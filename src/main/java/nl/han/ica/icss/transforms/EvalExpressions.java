@@ -7,6 +7,7 @@ import nl.han.ica.icss.ast.literals.ScalarLiteral;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,67 +21,69 @@ public class EvalExpressions implements Transform {
     @Override
     public void apply(AST ast) {
         setVariableValues(ast);
-        for (ASTNode declaration : ast.getDeclarations()) {
-            transformVariables(declaration);
+        for (ASTNode node : ast.getDeclarations()) {
+            transformExpression(node);
         }
     }
 
-    private void transformVariables(ASTNode declaration) {
-        if (declaration instanceof Declaration) {
-            covertVariableReferenceToLiteral(declaration, ((Declaration) declaration).expression);
+    private void transformExpression(ASTNode node) {
+        if (node instanceof Declaration) {
+            covertExpressionToLiteral(node, ((Declaration) node).expression);
             return;
         }
 
-        if (declaration instanceof IfClause) {
-            covertVariableReferenceToLiteral(declaration, ((IfClause) declaration).conditionalExpression);
-            for (ASTNode ifClauseDeclaration : ((IfClause) declaration).body)
-                transformVariables(ifClauseDeclaration);
+        if (node instanceof IfClause) {
+            covertExpressionToLiteral(node, ((IfClause) node).conditionalExpression);
+            for (ASTNode ifClauseDeclaration : ((IfClause) node).body)
+                transformExpression(ifClauseDeclaration);
         }
     }
 
-    private Literal covertVariableReferenceToLiteral(ASTNode declaration, Expression expression) {
+    private Literal covertExpressionToLiteral(ASTNode node, Expression expression) {
         if (expression instanceof Literal) {
             return (Literal) expression;
         }
         if (expression instanceof VariableReference) {
             Literal literal = variableValues.get(((VariableReference) expression).name);
 
-            if (declaration instanceof Declaration) {
-                ((Declaration) declaration).expression = literal;
-                return literal;
+            if (node instanceof Declaration) {
+                ((Declaration) node).expression = literal;
             }
 
-            if (declaration instanceof IfClause) {
-                ((IfClause) declaration).conditionalExpression = literal;
+            if (node instanceof IfClause) {
+                ((IfClause) node).conditionalExpression = literal;
             }
+            return literal;
         }
         if (expression instanceof Operation) {
-            Literal lhs = covertVariableReferenceToLiteral(declaration, ((Operation) expression).lhs);
-            Literal rhs = covertVariableReferenceToLiteral(declaration, ((Operation) expression).rhs);
-            Literal res = null;
-            if (expression instanceof AddOperation) {
-                res = add(lhs, rhs);
+            Literal literal = getLiteralOfOperation(node, expression);
+            if (node instanceof Declaration) {
+                ((Declaration) node).expression = literal;
             }
-            if (expression instanceof SubtractOperation) {
-                res = subtract(lhs, rhs);
-            }
-            if (expression instanceof MultiplyOperation) {
-                res = multiply(lhs, rhs);
-            }
-
-            if (declaration instanceof Declaration) {
-                ((Declaration) declaration).expression = res;
-            }
-            return res;
+            return literal;
         }
         return null;
+    }
+
+    private Literal getLiteralOfOperation(ASTNode node, Expression expression) {
+        Literal lhs = covertExpressionToLiteral(node, ((Operation) expression).lhs);
+        Literal rhs = covertExpressionToLiteral(node, ((Operation) expression).rhs);
+        Literal res = null;
+        if (expression instanceof AddOperation) {
+            res = add(lhs, rhs);
+        } else if (expression instanceof SubtractOperation) {
+            res = subtract(lhs, rhs);
+        } else if (expression instanceof MultiplyOperation) {
+            res = multiply(lhs, rhs);
+        }
+        return res;
     }
 
     private void setVariableValues(AST ast) {
         List<ASTNode> assignments = ast.getVariableAssignments();
         for (ASTNode node : assignments) {
             if (node instanceof VariableAssignment) {
-                variableValues.put(((VariableAssignment) node).name.name, (Literal) ((VariableAssignment) node).expression);
+                variableValues.put(((VariableAssignment) node).name.name, covertExpressionToLiteral(node, ((VariableAssignment) node).expression));
             }
         }
     }

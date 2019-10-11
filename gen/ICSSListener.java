@@ -171,17 +171,17 @@ public interface ICSSListener extends ParseTreeListener {
 	 */
 	void exitAddSubtractOperation(ICSSParser.AddSubtractOperationContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code literalVarExpression}
+	 * Enter a parse tree produced by the {@code literalExpression}
 	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 */
-	void enterLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx);
+	void enterLiteralExpression(ICSSParser.LiteralExpressionContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code literalVarExpression}
+	 * Exit a parse tree produced by the {@code literalExpression}
 	 * labeled alternative in {@link ICSSParser#operation}.
 	 * @param ctx the parse tree
 	 */
-	void exitLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx);
+	void exitLiteralExpression(ICSSParser.LiteralExpressionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ICSSParser#expression}.
 	 * @param ctx the parse tree

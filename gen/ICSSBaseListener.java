@@ -207,13 +207,13 @@ public class ICSSBaseListener implements ICSSListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx) { }
+	@Override public void enterLiteralExpression(ICSSParser.LiteralExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitLiteralVarExpression(ICSSParser.LiteralVarExpressionContext ctx) { }
+	@Override public void exitLiteralExpression(ICSSParser.LiteralExpressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
