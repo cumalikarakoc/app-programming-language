@@ -1,7 +1,7 @@
 package nl.han.ica.icss.checker;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.operations.AddOperation;
@@ -11,39 +11,38 @@ import nl.han.ica.icss.ast.types.*;
 
 public class Checker {
 
-    private HashMap<String, ExpressionType> variableTypes = new HashMap<>();
+    private LinkedList<Map<String, ExpressionType>> variableTypes = new LinkedList<>();
 
     public void check(AST ast) {
         setVariableTypes(ast);
-        List<ASTNode> declarations = ast.getDeclarations();
-        for (ASTNode declaration : declarations) {
-            validateDeclaration(declaration);
+        for (ASTNode styleRule : ast.getStyleRules()) {
+            validateDeclaration(styleRule, 0);
         }
     }
 
-    private void validateDeclaration(ASTNode node) {
+    private void validateDeclaration(ASTNode node, int scopeLevel) {
         if (node instanceof IfClause) {
-            validateIfClauseConditions(((IfClause) node).conditionalExpression, (IfClause) node);
+            validateIfClauseConditions(((IfClause) node).conditionalExpression, (IfClause) node, scopeLevel);
         }
         if (node instanceof Declaration) {
             Expression expression = ((Declaration) node).expression;
-            validateVariables(expression);
-            validatePropertyValueTypes(((Declaration) node).property, expression);
-            validateOperands(expression);
+            validateVariables(expression, scopeLevel);
+            validatePropertyValueTypes(((Declaration) node).property, expression, scopeLevel);
+            validateOperands(expression, scopeLevel);
         }
     }
 
-    private void validateOperands(Expression expression) {
+    private void validateOperands(Expression expression, int scopeLevel) {
         if (!(expression instanceof Operation)) return;
 
         Operation operation = (Operation) expression;
 
         // check the lhs and rhs recursively because they could be operations as well
-        validateOperands(operation.lhs);
-        validateOperands(operation.rhs);
+        validateOperands(operation.lhs, scopeLevel);
+        validateOperands(operation.rhs, scopeLevel);
 
-        ExpressionType lhsType = getExpressionType(operation.lhs);
-        ExpressionType rhsType = getExpressionType(operation.rhs);
+        ExpressionType lhsType = getExpressionType(operation.lhs, scopeLevel);
+        ExpressionType rhsType = getExpressionType(operation.rhs, scopeLevel);
 
         if (lhsType == ExpressionType.COLOR || rhsType == ExpressionType.COLOR) {
             operation.setError("An operand may not be the type COLOR.");
@@ -62,37 +61,60 @@ public class Checker {
 
     }
 
-    private void validateIfClauseConditions(Expression expression, IfClause ifClause) {
-        if (getExpressionType(expression) != ExpressionType.BOOL) {
+    private void validateIfClauseConditions(Expression expression, IfClause ifClause, int scopeLevel) {
+        if (getExpressionType(expression, scopeLevel) != ExpressionType.BOOL) {
             ifClause.conditionalExpression.setError("The condition must be the type boolean.");
         }
 
+        scopeLevel++;
+
         for (ASTNode node : ifClause.body) {
-            validateDeclaration(node);
+            validateDeclaration(node, scopeLevel);
         }
     }
 
-    private void validateVariables(Expression expression) {
+    private void validateVariables(Expression expression, int scopeLevel) {
         if (expression instanceof Operation) {
-            validateVariables(((Operation) expression).rhs);
-            validateVariables(((Operation) expression).lhs);
+            validateVariables(((Operation) expression).rhs, scopeLevel);
+            validateVariables(((Operation) expression).lhs, scopeLevel);
         }
         if (expression instanceof VariableReference) {
-            if (!variableTypes.containsKey(((VariableReference) expression).name)) {
+            if ((variableTypes.get(scopeLevel) == null || !(variableTypes.get(scopeLevel).containsKey(((VariableReference) expression).name)))
+                    && !variableTypes.getFirst().containsKey(((VariableReference) expression).name)) {
                 expression.setError("Variable " + ((VariableReference) expression).name + " is not defined.");
             }
         }
     }
 
     private void setVariableTypes(AST ast) {
-        List<ASTNode> variableAssignments = ast.getVariableAssignments();
-        for (ASTNode node : variableAssignments) {
-            variableTypes.put(((VariableAssignment) node).name.name, getExpressionType(((VariableAssignment) node).expression));
+        LinkedList<Map<String, Expression>> variableAssignments = ast.getVariableAssignments();
+        for (Map<String, Expression> scope : variableAssignments) {
+            Map<String, ExpressionType> scopeVariableTypes = new HashMap<>();
+            for (String var : scope.keySet()) {
+                scopeVariableTypes.put(var, mapToExpressionType(scope.get(var)));
+            }
+            variableTypes.add(scopeVariableTypes);
         }
     }
 
-    private void validatePropertyValueTypes(PropertyName property, Expression expression) {
-        ExpressionType expressionType = getExpressionType(expression);
+    private void validatePropertyValueTypes(PropertyName property, Expression expression, int scopeLevel) {
+        ExpressionType expressionType = getExpressionType(expression, scopeLevel);
+
+        boolean isCompatible = isExpressionCompatibleWithProperty(property, expressionType);
+
+        if (!isCompatible) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Property ").append(property.name);
+            if (expressionType == null) {
+                sb.append(" may not be null");
+            } else {
+                sb.append(" is incompatible with type ").append(expressionType);
+            }
+            property.setError(sb.toString());
+        }
+    }
+
+    private boolean isExpressionCompatibleWithProperty(PropertyName property, ExpressionType expressionType) {
         boolean match;
         switch (property.name) {
             case "width":
@@ -106,26 +128,20 @@ public class Checker {
             default:
                 match = false;
         }
-
-        if (!match) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Property ").append(property.name);
-            if (expressionType == null) {
-                sb.append(" may not be null");
-            } else {
-                sb.append(" is incompatible with type ").append(expressionType);
-            }
-            property.setError(sb.toString());
-        }
+        return match;
     }
 
-    private ExpressionType getExpressionType(Expression expression) {
+    private ExpressionType getExpressionType(Expression expression, int scopeLevel) {
         if (expression instanceof VariableReference) {
-            return variableTypes.get(((VariableReference) expression).name);
+            if (variableTypes.get(scopeLevel) != null && variableTypes.get(scopeLevel).containsKey(((VariableReference) expression).name)) {
+                return variableTypes.get(scopeLevel).get(((VariableReference) expression).name);
+            } else {
+                return variableTypes.getFirst().get(((VariableReference) expression).name);
+            }
         }
         if (expression instanceof Operation) {
-            ExpressionType lhsType = getExpressionType(((Operation) expression).lhs);
-            ExpressionType rhsType = getExpressionType(((Operation) expression).rhs);
+            ExpressionType lhsType = getExpressionType(((Operation) expression).lhs, scopeLevel);
+            ExpressionType rhsType = getExpressionType(((Operation) expression).rhs, scopeLevel);
 
             if (expression instanceof MultiplyOperation) {
                 return lhsType == ExpressionType.SCALAR
@@ -135,10 +151,10 @@ public class Checker {
                 return lhsType;
             }
         }
-        return mapLiteralToExpressionType(expression);
+        return mapToExpressionType(expression);
     }
 
-    private ExpressionType mapLiteralToExpressionType(ASTNode node) {
+    private ExpressionType mapToExpressionType(ASTNode node) {
         if (node instanceof BoolLiteral) {
             return ExpressionType.BOOL;
         }

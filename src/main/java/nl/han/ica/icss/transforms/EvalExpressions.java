@@ -8,6 +8,7 @@ import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class EvalExpressions implements Transform {
     @Override
     public void apply(AST ast) {
         setVariableValues(ast);
-        for (ASTNode node : ast.getDeclarations()) {
+        for (ASTNode node : ast.getStyleRules()) {
             transformExpression(node);
         }
     }
@@ -80,7 +81,7 @@ public class EvalExpressions implements Transform {
     }
 
     private void setVariableValues(AST ast) {
-        List<ASTNode> assignments = ast.getVariableAssignments();
+        List<ASTNode> assignments = new ArrayList<>();//ast.getVariableAssignments();
         for (ASTNode node : assignments) {
             if (node instanceof VariableAssignment) {
                 variableValues.put(((VariableAssignment) node).name.name, covertExpressionToLiteral(node, ((VariableAssignment) node).expression));

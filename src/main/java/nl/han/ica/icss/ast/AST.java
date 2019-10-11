@@ -2,9 +2,7 @@ package nl.han.ica.icss.ast;
 
 import nl.han.ica.icss.checker.SemanticError;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class AST {
     private static final String VAR_ASSIGNMENTS = "VAR_ASSIGNMENTS";
@@ -40,29 +38,48 @@ public class AST {
         }
     }
 
-    public List<ASTNode> getVariableAssignments() {
-        return extractGivenChildGroup(VAR_ASSIGNMENTS);
+    public LinkedList<Map<String, Expression>> getVariableAssignments() {
+        LinkedList<Map<String, Expression>> varAssignments = new LinkedList<>();
+        extractVariableAssignments(root.body, varAssignments);
+        return varAssignments;
     }
 
-    public List<ASTNode> getDeclarations() {
-        return extractGivenChildGroup(STYLE_RULES);
-    }
-
-    private List<ASTNode> extractGivenChildGroup(String childGroup) {
-        List<ASTNode> nodes = new ArrayList<>();
-        for (ASTNode node : root.body) {
-            if (childGroup.equals(VAR_ASSIGNMENTS)) {
-                if (node instanceof VariableAssignment) {
-                    nodes.add(node);
-                }
-            } else if (childGroup.equals(STYLE_RULES)) {
-                if (node instanceof Stylerule) {
-                    nodes.addAll(((Stylerule) node).body);
-                }
+    private void extractVariableAssignments(List<ASTNode> nodes, LinkedList<Map<String, Expression>> varAssignments) {
+        Map<String, Expression> scope = new HashMap<>();
+        for (ASTNode node : nodes) {
+            if (node instanceof VariableAssignment) {
+                scope.put(((VariableAssignment) node).name.name, ((VariableAssignment) node).expression);
+                continue;
             }
-
+            if (node instanceof Stylerule) {
+                if (!scope.isEmpty()) {
+                    varAssignments.add(scope);
+                }
+                extractVariableAssignments(((Stylerule) node).body, varAssignments);
+                return;
+            }
+            if (node instanceof IfClause) {
+                if (!scope.isEmpty()) {
+                    varAssignments.add(scope);
+                }
+                extractVariableAssignments(((IfClause) node).body, varAssignments);
+                return;
+            }
         }
-        return nodes;
+        if (!scope.isEmpty()) {
+            varAssignments.add(scope);
+        }
+    }
+
+    public List<ASTNode> getStyleRules() {
+        List<ASTNode> styleRules = new ArrayList<>();
+
+        for(ASTNode node : root.body){
+            if(node instanceof Stylerule){
+                styleRules.addAll(((Stylerule) node).body);
+            }
+        }
+        return styleRules;
     }
 
     @Override
