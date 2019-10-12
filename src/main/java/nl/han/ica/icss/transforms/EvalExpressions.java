@@ -21,13 +21,13 @@ public class EvalExpressions implements Transform {
     @Override
     public void apply(AST ast) {
         setVariableValues(ast);
-        int scopeLevel = 1;
+        int scopeLevel = 0;
         for (ASTNode styleRule : ast.getStyleRules()) {
+            scopeLevel++;
+            currentStyleRule = scopeLevel;
             for (ASTNode node : ((Stylerule) styleRule).body) {
                 scopeLevel = transformExpression(node, scopeLevel);
             }
-            scopeLevel++;
-            currentStyleRule += scopeLevel;
         }
     }
 
@@ -40,19 +40,10 @@ public class EvalExpressions implements Transform {
         if (node instanceof IfClause) {
             convertExpressionToLiteral(node, ((IfClause) node).conditionalExpression, scopeLevel);
 
-            boolean hasVarAssignment = false;
-            for (ASTNode child : ((IfClause) node).body) {
-                if (child instanceof VariableAssignment) {
-                    hasVarAssignment = true;
-                    break;
-                }
-            }
-            if (hasVarAssignment) {
-                scopeLevel++;
-            }
+            scopeLevel++;
 
-            for (ASTNode ifClauseDeclaration : ((IfClause) node).body){
-                transformExpression(ifClauseDeclaration, scopeLevel);
+            for (ASTNode ifClauseDeclaration : ((IfClause) node).body) {
+                scopeLevel = transformExpression(ifClauseDeclaration, scopeLevel);
             }
         }
         return scopeLevel;
@@ -65,13 +56,13 @@ public class EvalExpressions implements Transform {
         if (expression instanceof VariableReference) {
             Literal literal = null;
             if (scopeLevel < variableValues.size()) {
-                for (int i = variableValues.size() - 1; i >= currentStyleRule; i--) {
+                for (int i = scopeLevel; i >= currentStyleRule; i--) {
                     if (variableValues.get(i).containsKey(((VariableReference) expression).name)) {
                         literal = variableValues.get(i).get(((VariableReference) expression).name);
                         break;
                     }
                 }
-                if(literal == null){
+                if (literal == null) {
                     literal = variableValues.getFirst().get(((VariableReference) expression).name);
                 }
             }

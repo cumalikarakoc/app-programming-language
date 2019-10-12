@@ -13,20 +13,32 @@ public class Checker {
 
     private LinkedList<Map<String, ExpressionType>> variableTypes = new LinkedList<>();
     private int currentStyleRule = 1;
+    private Map<ExpressionType, List<String>> properties = new HashMap<>();
+
+
+    public Checker() {
+        List<String> PERCENTAGE_PIXEL_PROPERTIES = new ArrayList<>(List.of("width", "height"));
+        List<String> COLOR_PROPERTIES = new ArrayList<>(List.of("color", "background-color"));
+
+        properties.put(ExpressionType.PERCENTAGE, PERCENTAGE_PIXEL_PROPERTIES);
+        properties.put(ExpressionType.PIXEL, PERCENTAGE_PIXEL_PROPERTIES);
+        properties.put(ExpressionType.COLOR, COLOR_PROPERTIES);
+
+    }
 
     public void check(AST ast) {
         setVariableTypes(ast);
-        int scopeLevel = 1;
+        int scopeLevel = 0;
         for (ASTNode styleRule : ast.getStyleRules()) {
-            for (ASTNode node : ((Stylerule) styleRule).body) {
-                scopeLevel = validateDeclaration(node, scopeLevel);
-            }
             scopeLevel++;
-            currentStyleRule += scopeLevel;
+            currentStyleRule = scopeLevel;
+            for (ASTNode node : ((Stylerule) styleRule).body) {
+                scopeLevel = validateBody(node, scopeLevel);
+            }
         }
     }
 
-    private int validateDeclaration(ASTNode node, int scopeLevel) {
+    private int validateBody(ASTNode node, int scopeLevel) {
         if (node instanceof IfClause) {
             return validateIfClauseConditions(((IfClause) node).conditionalExpression, (IfClause) node, scopeLevel);
         }
@@ -73,20 +85,11 @@ public class Checker {
             ifClause.conditionalExpression.setError("The condition must be the type boolean.");
         }
 
-        boolean hasVarAssignment = false;
-        for (ASTNode node : ifClause.body) {
-            if (node instanceof VariableAssignment) {
-                hasVarAssignment = true;
-                break;
-            }
-        }
-        if (hasVarAssignment) {
-            scopeLevel++;
-        }
+        scopeLevel++;
 
         for (ASTNode node : ifClause.body) {
             if (!(node instanceof VariableAssignment)) {
-                return validateDeclaration(node, scopeLevel);
+                scopeLevel = validateBody(node, scopeLevel);
             }
         }
         return scopeLevel;
@@ -98,8 +101,8 @@ public class Checker {
             validateVariables(((Operation) expression).lhs, scopeLevel, currentStyleRule);
         }
         if (expression instanceof VariableReference) {
-            if ((scopeLevel >= variableTypes.size() || !(variableTypes.get(scopeLevel).containsKey(((VariableReference) expression).name)))) {
-                for (int i = variableTypes.size() - 1; i >= currentStyleRule; i--) {
+            if (scopeLevel < variableTypes.size()) {
+                for (int i = scopeLevel; i >= currentStyleRule; i--) {
                     if (variableTypes.get(i).containsKey(((VariableReference) expression).name)) {
                         return;
                     }
@@ -108,9 +111,8 @@ public class Checker {
                 if (variableTypes.getFirst().containsKey(((VariableReference) expression).name)) {
                     return;
                 }
-
-                expression.setError("Variable " + ((VariableReference) expression).name + " is not defined.");
             }
+            expression.setError("Variable " + ((VariableReference) expression).name + " is not defined.");
         }
     }
 
@@ -143,28 +145,13 @@ public class Checker {
     }
 
     private boolean isExpressionCompatibleWithProperty(PropertyName property, ExpressionType expressionType) {
-        boolean match;
-        switch (property.name) {
-            case "width":
-            case "height":
-                match = expressionType == ExpressionType.PERCENTAGE || expressionType == ExpressionType.PIXEL;
-                break;
-            case "color":
-            case "background-color":
-                match = expressionType == ExpressionType.COLOR;
-                break;
-            default:
-                match = false;
-        }
-        return match;
+        return properties.get(expressionType) != null && properties.get(expressionType).contains(property.name);
     }
 
     private ExpressionType getExpressionType(Expression expression, int scopeLevel) {
         if (expression instanceof VariableReference) {
-            if (scopeLevel < variableTypes.size() && variableTypes.get(scopeLevel).containsKey(((VariableReference) expression).name)) {
-                return variableTypes.get(scopeLevel).get(((VariableReference) expression).name);
-            } else {
-                for (int i = variableTypes.size() - 1; i >= currentStyleRule; i--) {
+            if (scopeLevel < variableTypes.size()) {
+                for (int i = scopeLevel; i >= currentStyleRule; i--) {
                     if (variableTypes.get(i).containsKey(((VariableReference) expression).name)) {
                         return variableTypes.get(i).get(((VariableReference) expression).name);
                     }
