@@ -39,19 +39,17 @@ MUL: '*';
 ASSIGNMENT_OPERATOR: ':=';
 
 //--- PARSER: ---
-stylesheet:(varAssignments |) styleRules;
-varAssignments: varAssignment+;
+stylesheet:varAssignment* styleRule*;
 varAssignment: varName ASSIGNMENT_OPERATOR (expression | operation) SEMICOLON;
 varName: CAPITAL_IDENT;
-styleRules: styleRule+;
-styleRule: tagSelector OPEN_BRACE declarations CLOSE_BRACE;
+styleRule: tagSelector OPEN_BRACE selectorBody CLOSE_BRACE;
 tagSelector: (idSelector | classSelector | elementSelector);
 idSelector: ID_IDENT;
 classSelector: CLASS_IDENT;
 elementSelector: LOWER_IDENT;
-declarations: declaration+ ifClause*;
+selectorBody: (varAssignment+|) (declaration+|) ifClause* (declaration+|) ;
 declaration: propName COLON propVal SEMICOLON;
-ifClause: IF BOX_BRACKET_OPEN expression BOX_BRACKET_CLOSE OPEN_BRACE (varAssignments |) declarations CLOSE_BRACE;
+ifClause: IF BOX_BRACKET_OPEN expression BOX_BRACKET_CLOSE OPEN_BRACE selectorBody CLOSE_BRACE;
 propVal: expression | operation;
 operation: expression                         # literalExpression
        |   operation MUL operation            # multiplyOperation

@@ -17,16 +17,6 @@ public interface ICSSListener extends ParseTreeListener {
 	 */
 	void exitStylesheet(ICSSParser.StylesheetContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ICSSParser#varAssignments}.
-	 * @param ctx the parse tree
-	 */
-	void enterVarAssignments(ICSSParser.VarAssignmentsContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ICSSParser#varAssignments}.
-	 * @param ctx the parse tree
-	 */
-	void exitVarAssignments(ICSSParser.VarAssignmentsContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link ICSSParser#varAssignment}.
 	 * @param ctx the parse tree
 	 */
@@ -46,16 +36,6 @@ public interface ICSSListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitVarName(ICSSParser.VarNameContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link ICSSParser#styleRules}.
-	 * @param ctx the parse tree
-	 */
-	void enterStyleRules(ICSSParser.StyleRulesContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ICSSParser#styleRules}.
-	 * @param ctx the parse tree
-	 */
-	void exitStyleRules(ICSSParser.StyleRulesContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ICSSParser#styleRule}.
 	 * @param ctx the parse tree
@@ -107,15 +87,15 @@ public interface ICSSListener extends ParseTreeListener {
 	 */
 	void exitElementSelector(ICSSParser.ElementSelectorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ICSSParser#declarations}.
+	 * Enter a parse tree produced by {@link ICSSParser#selectorBody}.
 	 * @param ctx the parse tree
 	 */
-	void enterDeclarations(ICSSParser.DeclarationsContext ctx);
+	void enterSelectorBody(ICSSParser.SelectorBodyContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ICSSParser#declarations}.
+	 * Exit a parse tree produced by {@link ICSSParser#selectorBody}.
 	 * @param ctx the parse tree
 	 */
-	void exitDeclarations(ICSSParser.DeclarationsContext ctx);
+	void exitSelectorBody(ICSSParser.SelectorBodyContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ICSSParser#declaration}.
 	 * @param ctx the parse tree

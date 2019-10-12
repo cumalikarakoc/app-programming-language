@@ -27,18 +27,6 @@ public class ICSSBaseListener implements ICSSListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterVarAssignments(ICSSParser.VarAssignmentsContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitVarAssignments(ICSSParser.VarAssignmentsContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterVarAssignment(ICSSParser.VarAssignmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -58,18 +46,6 @@ public class ICSSBaseListener implements ICSSListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitVarName(ICSSParser.VarNameContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStyleRules(ICSSParser.StyleRulesContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStyleRules(ICSSParser.StyleRulesContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -135,13 +111,13 @@ public class ICSSBaseListener implements ICSSListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDeclarations(ICSSParser.DeclarationsContext ctx) { }
+	@Override public void enterSelectorBody(ICSSParser.SelectorBodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitDeclarations(ICSSParser.DeclarationsContext ctx) { }
+	@Override public void exitSelectorBody(ICSSParser.SelectorBodyContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
