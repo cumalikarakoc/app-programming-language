@@ -14,7 +14,7 @@ import java.util.*;
 public class EvalExpressions implements Transform {
 
     private LinkedList<Map<String, Literal>> variableValues = new LinkedList<>();
-    private int currentStyleRule = 1;
+    private int currentStyleRule = 0;
     private int scopeLevel = 0;
 
     public EvalExpressions() {
@@ -22,24 +22,33 @@ public class EvalExpressions implements Transform {
 
     @Override
     public void apply(AST ast) {
-        setVariableValues(ast);
-        for (ASTNode styleRule : ast.getStyleRules()) {
-            scopeLevel++;
-            currentStyleRule = scopeLevel;
-            for (ASTNode node : ((Stylerule) styleRule).body) {
+        for (ASTNode node : ast.root.body) {
+            if (node instanceof VariableAssignment) {
                 transformExpression(node);
+                continue;
+            }
+            if (node instanceof Stylerule) {
+                scopeLevel++;
+                currentStyleRule = scopeLevel;
+                for (ASTNode styleRule : ((Stylerule) node).body) {
+                    transformExpression(styleRule);
+                }
             }
         }
     }
 
     private void transformExpression(ASTNode node) {
+        if (node instanceof VariableAssignment) {
+            setVariableValues((VariableAssignment) node);
+        }
+
         if (node instanceof Declaration) {
-            convertExpressionToLiteral(node, ((Declaration) node).expression);
+            ((Declaration) node).expression = convertExpressionToLiteral(((Declaration) node).expression);
             return;
         }
 
         if (node instanceof IfClause) {
-            convertExpressionToLiteral(node, ((IfClause) node).conditionalExpression);
+            ((IfClause) node).conditionalExpression = convertExpressionToLiteral(((IfClause) node).conditionalExpression);
 
             scopeLevel++;
 
@@ -49,47 +58,43 @@ public class EvalExpressions implements Transform {
         }
     }
 
-    private Literal convertExpressionToLiteral(ASTNode node, Expression expression) {
+    private void setVariableValues(VariableAssignment assignment) {
+        Map<String, Literal> variables;
+        if (scopeLevel < variableValues.size()) {
+            variables = variableValues.get(scopeLevel);
+        } else {
+            variables = new HashMap<>();
+            variableValues.add(variables);
+        }
+        variables.put(assignment.name.name, convertExpressionToLiteral(assignment.expression));
+    }
+
+    private Literal convertExpressionToLiteral(Expression expression) {
         if (expression instanceof Literal) {
             return (Literal) expression;
         }
+
         if (expression instanceof VariableReference) {
-            Literal literal = null;
-            if (scopeLevel < variableValues.size()) {
-                for (int i = scopeLevel; i >= currentStyleRule; i--) {
-                    if (variableValues.get(i).containsKey(((VariableReference) expression).name)) {
-                        literal = variableValues.get(i).get(((VariableReference) expression).name);
-                        break;
-                    }
+            int currentScope = scopeLevel < variableValues.size() ? scopeLevel : variableValues.size() - 1;
+            for (int i = currentScope; i >= currentStyleRule; i--) {
+                if (variableValues.get(i).containsKey(((VariableReference) expression).name)) {
+                    return variableValues.get(i).get(((VariableReference) expression).name);
                 }
             }
 
-            if (literal == null) {
-                literal = variableValues.getFirst().get(((VariableReference) expression).name);
-            }
-
-            if (node instanceof Declaration) {
-                ((Declaration) node).expression = literal;
-            }
-
-            if (node instanceof IfClause) {
-                ((IfClause) node).conditionalExpression = literal;
-            }
-            return literal;
+            //global
+            return variableValues.getFirst().get(((VariableReference) expression).name);
         }
+
         if (expression instanceof Operation) {
-            Literal literal = getLiteralOfOperation(node, expression);
-            if (node instanceof Declaration) {
-                ((Declaration) node).expression = literal;
-            }
-            return literal;
+            return getLiteralOfOperation(expression);
         }
         return null;
     }
 
-    private Literal getLiteralOfOperation(ASTNode node, Expression expression) {
-        Calculatable lhs = (Calculatable) convertExpressionToLiteral(node, ((Operation) expression).lhs);
-        Calculatable rhs = (Calculatable) convertExpressionToLiteral(node, ((Operation) expression).rhs);
+    private Literal getLiteralOfOperation(Expression expression) {
+        Calculatable lhs = (Calculatable) convertExpressionToLiteral(((Operation) expression).lhs);
+        Calculatable rhs = (Calculatable) convertExpressionToLiteral(((Operation) expression).rhs);
 
         if (expression instanceof AddOperation) {
             return add(lhs, rhs);
@@ -102,27 +107,6 @@ public class EvalExpressions implements Transform {
         }
 
         return null;
-    }
-
-    private void setVariableValues(AST ast) {
-        LinkedList<Map<String, Expression>> assignments = ast.getVariableAssignments();
-        int scopeLevel = 0;
-        for (Map<String, Expression> scope : assignments) {
-            if (scope.isEmpty()) {
-                variableValues.add(new HashMap<>());
-            } else {
-                Map<String, Literal> scopeVariableValues = new HashMap<>();
-                for (String var : scope.keySet()) {
-                    scopeVariableValues.put(var, convertExpressionToLiteral(null, scope.get(var)));
-                    if (scopeLevel < variableValues.size()) {
-                        variableValues.get(scopeLevel).putAll(scopeVariableValues);
-                    } else {
-                        variableValues.add(scopeVariableValues);
-                    }
-                }
-            }
-            scopeLevel++;
-        }
     }
 
     private Literal add(Calculatable lhs, Calculatable rhs) {
@@ -143,11 +127,11 @@ public class EvalExpressions implements Transform {
         throw new UnsupportedOperationException();
     }
 
-    private Literal getResultOfMultiplyOperation(Calculatable operand, int result) {
-        if (operand instanceof PixelLiteral) {
+    private Literal getResultOfMultiplyOperation(Calculatable nonScalarOperand, int result) {
+        if (nonScalarOperand instanceof PixelLiteral) {
             return new PixelLiteral(result);
         }
-        if (operand instanceof PercentageLiteral) {
+        if (nonScalarOperand instanceof PercentageLiteral) {
             return new PercentageLiteral(result);
         }
         throw new UnsupportedOperationException();

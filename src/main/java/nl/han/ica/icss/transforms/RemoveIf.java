@@ -3,7 +3,8 @@ package nl.han.ica.icss.transforms;
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.BoolLiteral;
 
-import java.util.List;
+import java.util.ArrayList;
+
 
 public class RemoveIf implements Transform {
 
@@ -11,33 +12,33 @@ public class RemoveIf implements Transform {
     public void apply(AST ast) {
         for (ASTNode node : ast.root.body) {
             if (node instanceof Stylerule) {
-                List<ASTNode> nodes = ((Stylerule) node).body;
-                for (int i = 0; i < nodes.size(); i++) {
-                    evaluateIf(node, node, nodes.get(i));
+                ArrayList<ASTNode> nodes = new ArrayList<>(((Stylerule) node).body);
+                for (ASTNode child : nodes) {
+                    evaluateIf(node, child);
                 }
             }
         }
     }
 
-    private void evaluateIf(ASTNode styleRule, ASTNode parent, ASTNode child) {
+    private void evaluateIf(ASTNode parent, ASTNode child) {
         if (child instanceof IfClause) {
             IfClause ifClause = (IfClause) child;
             if (!(((BoolLiteral) ifClause.conditionalExpression).value)) {
                 parent.removeChild(ifClause);
             } else {
-                evaluateBody(styleRule, ifClause);
+                evaluateBody(parent, ifClause);
             }
         }
     }
 
     private void evaluateBody(ASTNode styleRule, IfClause ifClause) {
-        List<ASTNode> nodes = ifClause.body;
-        for (int i = 0; i < nodes.size(); i++) {
-            if (nodes.get(i) instanceof Declaration) {
-                ((Stylerule) styleRule).body.add(nodes.get(i));
+        ArrayList<ASTNode> nodes = new ArrayList<>(ifClause.body);
+        for (ASTNode node : nodes) {
+            if (node instanceof Declaration) {
+                ((Stylerule) styleRule).body.add(node);
             }
-            if (nodes.get(i) instanceof IfClause) {
-                evaluateIf(styleRule, ifClause, nodes.get(i));
+            if (node instanceof IfClause) {
+                evaluateIf(styleRule, node);
             }
         }
     }

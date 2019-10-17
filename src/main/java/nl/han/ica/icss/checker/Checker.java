@@ -12,7 +12,7 @@ import nl.han.ica.icss.ast.types.*;
 public class Checker {
 
     private LinkedList<Map<String, ExpressionType>> variableTypes = new LinkedList<>();
-    private int currentStyleRule = 1;
+    private int currentStyleRule = 0;
     private int scopeLevel = 0;
     private Map<ExpressionType, List<String>> properties = new HashMap<>();
 
@@ -27,21 +27,35 @@ public class Checker {
     }
 
     public void check(AST ast) {
-        setVariableTypes(ast);
-        for (ASTNode styleRule : ast.getStyleRules()) {
-            scopeLevel++;
-            currentStyleRule = scopeLevel;
-            for (ASTNode node : ((Stylerule) styleRule).body) {
-                validateBody(node);
+        for (ASTNode node : ast.root.body) {
+            if (node instanceof VariableAssignment) {
+                validateStyleSheet(node);
+                continue;
+            }
+
+            if (node instanceof Stylerule) {
+                scopeLevel++;
+                currentStyleRule = scopeLevel;
+                for (ASTNode styleRule : ((Stylerule) node).body) {
+                    validateStyleSheet(styleRule);
+                }
             }
         }
     }
 
-    private void validateBody(ASTNode node) {
+    private void validateStyleSheet(ASTNode node) {
+        if (node instanceof VariableAssignment) {
+            setVariableTypes((VariableAssignment) node);
+            validateVariables(((VariableAssignment) node).expression);
+            validateOperands(((VariableAssignment) node).expression);
+            return;
+        }
+
         if (node instanceof IfClause) {
             validateIfClauseConditions(((IfClause) node).conditionalExpression, (IfClause) node);
             return;
         }
+
         if (node instanceof Declaration) {
             Expression expression = ((Declaration) node).expression;
             validateVariables(expression);
@@ -87,9 +101,7 @@ public class Checker {
         scopeLevel++;
 
         for (ASTNode node : ifClause.body) {
-            if (!(node instanceof VariableAssignment)) {
-                validateBody(node);
-            }
+            validateStyleSheet(node);
         }
     }
 
@@ -99,57 +111,27 @@ public class Checker {
             validateVariables(((Operation) expression).lhs);
         }
         if (expression instanceof VariableReference) {
-            if (scopeLevel < variableTypes.size()) {
-                for (int i = scopeLevel; i >= currentStyleRule; i--) {
-                    if (variableTypes.get(i).containsKey(((VariableReference) expression).name)) {
-                        return;
-                    }
-                }
+            if (getExpressionTypeOfVariable((VariableReference) expression) == ExpressionType.UNDEFINED) {
+                expression.setError("Variable " + ((VariableReference) expression).name + " is not defined.");
             }
-            if (variableTypes.getFirst().containsKey(((VariableReference) expression).name)) {
-                return;
-            }
-            expression.setError("Variable " + ((VariableReference) expression).name + " is not defined.");
         }
     }
 
-    private void setVariableTypes(AST ast) {
-        LinkedList<Map<String, Expression>> variableAssignments = ast.getVariableAssignments();
-        int scopeLevel = 0;
-        for (Map<String, Expression> scope : variableAssignments) {
-            if (scope.isEmpty()) {
-                variableTypes.add(new HashMap<>());
-            } else {
-                Map<String, ExpressionType> scopeVariableTypes = new HashMap<>();
-                for (String var : scope.keySet()) {
-                    scopeVariableTypes.put(var, getExpressionType(scope.get(var)));
-                    if (scopeLevel < variableTypes.size()) {
-                        variableTypes.get(scopeLevel).putAll(scopeVariableTypes);
-                    } else {
-                        variableTypes.add(scopeVariableTypes);
-                    }
-                    validateOperands(scope.get(var));
-                    validateVariables(scope.get(var));
-                }
-            }
-            scopeLevel++;
+    private void setVariableTypes(VariableAssignment assignment) {
+        Map<String, ExpressionType> variables;
+        if (scopeLevel < variableTypes.size()) {
+            variables = variableTypes.get(scopeLevel);
+        } else {
+            variables = new HashMap<>();
+            variableTypes.add(variables);
         }
+        variables.put(assignment.name.name, getExpressionType(assignment.expression));
     }
 
     private void validatePropertyValueTypes(PropertyName property, Expression expression) {
         ExpressionType expressionType = getExpressionType(expression);
-
-        boolean isCompatible = isExpressionCompatibleWithProperty(property, expressionType);
-
-        if (!isCompatible) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Property ").append(property.name);
-            if (expressionType == null) {
-                sb.append(" may not be null");
-            } else {
-                sb.append(" is incompatible with type ").append(expressionType);
-            }
-            property.setError(sb.toString());
+        if (!isExpressionCompatibleWithProperty(property, expressionType)) {
+            property.setError("Property " + property.name + " is incompatible with type " + expressionType);
         }
     }
 
@@ -159,36 +141,44 @@ public class Checker {
 
     private ExpressionType getExpressionType(Expression expression) {
         if (expression instanceof VariableReference) {
-            if (scopeLevel < variableTypes.size()) {
-                for (int i = scopeLevel; i >= currentStyleRule; i--) {
-                    if (variableTypes.get(i).containsKey(((VariableReference) expression).name)) {
-                        return variableTypes.get(i).get(((VariableReference) expression).name);
-                    }
-                }
-            }
-            if (variableTypes.getFirst().containsKey(((VariableReference) expression).name)) {
-                return variableTypes.getFirst().get(((VariableReference) expression).name);
-            }
+            return getExpressionTypeOfVariable((VariableReference) expression);
         }
         if (expression instanceof Operation) {
-            ExpressionType lhsType = getExpressionType(((Operation) expression).lhs);
-            ExpressionType rhsType = getExpressionType(((Operation) expression).rhs);
-
-            if (expression instanceof MultiplyOperation) {
-                if (lhsType != ExpressionType.SCALAR && rhsType != ExpressionType.SCALAR) {
-                    return ExpressionType.UNDEFINED;
-                }
-                return lhsType == ExpressionType.SCALAR
-                        ? rhsType
-                        : lhsType;
-            } else {
-                if (lhsType != rhsType) {
-                    return ExpressionType.UNDEFINED;
-                }
-                return lhsType;
-            }
+            return getExpressionTypeOfOperation((Operation) expression);
         }
         return mapToExpressionType(expression);
+    }
+
+    private ExpressionType getExpressionTypeOfOperation(Operation operation) {
+        ExpressionType lhsType = getExpressionType(operation.lhs);
+        ExpressionType rhsType = getExpressionType(operation.rhs);
+        if (operation instanceof MultiplyOperation) {
+            if (lhsType != ExpressionType.SCALAR && rhsType != ExpressionType.SCALAR) {
+                return ExpressionType.UNDEFINED;
+            }
+            return lhsType == ExpressionType.SCALAR
+                    ? rhsType
+                    : lhsType;
+        } else {
+            if (lhsType != rhsType) {
+                return ExpressionType.UNDEFINED;
+            }
+            return lhsType;
+        }
+    }
+
+    private ExpressionType getExpressionTypeOfVariable(VariableReference reference) {
+        int currentScope = scopeLevel < variableTypes.size() ? scopeLevel : variableTypes.size() - 1;
+        for (int i = currentScope; i >= currentStyleRule; i--) {
+            if (variableTypes.get(i).containsKey(reference.name)) {
+                return variableTypes.get(i).get(reference.name);
+            }
+        }
+        // global
+        if (variableTypes.getFirst().containsKey(reference.name)) {
+            return variableTypes.getFirst().get(reference.name);
+        }
+        return ExpressionType.UNDEFINED;
     }
 
     private ExpressionType mapToExpressionType(ASTNode node) {
