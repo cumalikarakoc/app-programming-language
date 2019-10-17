@@ -4,7 +4,7 @@ import nl.han.ica.icss.ast.Literal;
 
 import java.util.Objects;
 
-public class PixelLiteral extends Literal {
+public class PixelLiteral extends Literal implements Calculatable{
     public int value;
 
     public PixelLiteral(int value) {
@@ -30,5 +30,10 @@ public class PixelLiteral extends Literal {
     @Override
     public int hashCode() {
         return Objects.hash(value);
+    }
+
+    @Override
+    public int getValue() {
+        return value;
     }
 }

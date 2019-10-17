@@ -1,6 +1,7 @@
 package nl.han.ica.icss.transforms;
 
 import nl.han.ica.icss.ast.*;
+import nl.han.ica.icss.ast.literals.Calculatable;
 import nl.han.ica.icss.ast.literals.PercentageLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
 import nl.han.ica.icss.ast.literals.ScalarLiteral;
@@ -14,6 +15,7 @@ public class EvalExpressions implements Transform {
 
     private LinkedList<Map<String, Literal>> variableValues = new LinkedList<>();
     private int currentStyleRule = 1;
+    private int scopeLevel = 0;
 
     public EvalExpressions() {
     }
@@ -21,35 +23,33 @@ public class EvalExpressions implements Transform {
     @Override
     public void apply(AST ast) {
         setVariableValues(ast);
-        int scopeLevel = 0;
         for (ASTNode styleRule : ast.getStyleRules()) {
             scopeLevel++;
             currentStyleRule = scopeLevel;
             for (ASTNode node : ((Stylerule) styleRule).body) {
-                scopeLevel = transformExpression(node, scopeLevel);
+                transformExpression(node);
             }
         }
     }
 
-    private int transformExpression(ASTNode node, int scopeLevel) {
+    private void transformExpression(ASTNode node) {
         if (node instanceof Declaration) {
-            convertExpressionToLiteral(node, ((Declaration) node).expression, scopeLevel);
-            return scopeLevel;
+            convertExpressionToLiteral(node, ((Declaration) node).expression);
+            return;
         }
 
         if (node instanceof IfClause) {
-            convertExpressionToLiteral(node, ((IfClause) node).conditionalExpression, scopeLevel);
+            convertExpressionToLiteral(node, ((IfClause) node).conditionalExpression);
 
             scopeLevel++;
 
             for (ASTNode ifClauseDeclaration : ((IfClause) node).body) {
-                scopeLevel = transformExpression(ifClauseDeclaration, scopeLevel);
+                transformExpression(ifClauseDeclaration);
             }
         }
-        return scopeLevel;
     }
 
-    private Literal convertExpressionToLiteral(ASTNode node, Expression expression, int scopeLevel) {
+    private Literal convertExpressionToLiteral(ASTNode node, Expression expression) {
         if (expression instanceof Literal) {
             return (Literal) expression;
         }
@@ -62,9 +62,10 @@ public class EvalExpressions implements Transform {
                         break;
                     }
                 }
-                if (literal == null) {
-                    literal = variableValues.getFirst().get(((VariableReference) expression).name);
-                }
+            }
+
+            if (literal == null) {
+                literal = variableValues.getFirst().get(((VariableReference) expression).name);
             }
 
             if (node instanceof Declaration) {
@@ -77,7 +78,7 @@ public class EvalExpressions implements Transform {
             return literal;
         }
         if (expression instanceof Operation) {
-            Literal literal = getLiteralOfOperation(node, expression, scopeLevel);
+            Literal literal = getLiteralOfOperation(node, expression);
             if (node instanceof Declaration) {
                 ((Declaration) node).expression = literal;
             }
@@ -86,75 +87,79 @@ public class EvalExpressions implements Transform {
         return null;
     }
 
-    private Literal getLiteralOfOperation(ASTNode node, Expression expression, int scopeLevel) {
-        Literal lhs = convertExpressionToLiteral(node, ((Operation) expression).lhs, scopeLevel);
-        Literal rhs = convertExpressionToLiteral(node, ((Operation) expression).rhs, scopeLevel);
-        Literal res = null;
+    private Literal getLiteralOfOperation(ASTNode node, Expression expression) {
+        Calculatable lhs = (Calculatable) convertExpressionToLiteral(node, ((Operation) expression).lhs);
+        Calculatable rhs = (Calculatable) convertExpressionToLiteral(node, ((Operation) expression).rhs);
+
         if (expression instanceof AddOperation) {
-            res = add(lhs, rhs);
-        } else if (expression instanceof SubtractOperation) {
-            res = subtract(lhs, rhs);
-        } else if (expression instanceof MultiplyOperation) {
-            res = multiply(lhs, rhs);
+            return add(lhs, rhs);
         }
-        return res;
+        if (expression instanceof SubtractOperation) {
+            return subtract(lhs, rhs);
+        }
+        if (expression instanceof MultiplyOperation) {
+            return multiply(lhs, rhs);
+        }
+
+        return null;
     }
 
     private void setVariableValues(AST ast) {
         LinkedList<Map<String, Expression>> assignments = ast.getVariableAssignments();
         int scopeLevel = 0;
         for (Map<String, Expression> scope : assignments) {
-            Map<String, Literal> scopeVariableValues = new HashMap<>();
-            for (String var : scope.keySet()) {
-                scopeVariableValues.put(var, convertExpressionToLiteral(null, scope.get(var), scopeLevel));
+            if (scope.isEmpty()) {
+                variableValues.add(new HashMap<>());
+            } else {
+                Map<String, Literal> scopeVariableValues = new HashMap<>();
+                for (String var : scope.keySet()) {
+                    scopeVariableValues.put(var, convertExpressionToLiteral(null, scope.get(var)));
+                    if (scopeLevel < variableValues.size()) {
+                        variableValues.get(scopeLevel).putAll(scopeVariableValues);
+                    } else {
+                        variableValues.add(scopeVariableValues);
+                    }
+                }
             }
-            variableValues.add(scopeVariableValues);
             scopeLevel++;
         }
     }
 
-    private Literal add(Literal lhs, Literal rhs) {
-        if (lhs instanceof PixelLiteral && rhs instanceof PixelLiteral) {
-            return new PixelLiteral(((PixelLiteral) lhs).value + ((PixelLiteral) rhs).value);
-        }
-        if (lhs instanceof PercentageLiteral && rhs instanceof PercentageLiteral) {
-            return new PercentageLiteral(((PercentageLiteral) lhs).value + ((PercentageLiteral) rhs).value);
-        }
-
-        throw new UnsupportedOperationException();
+    private Literal add(Calculatable lhs, Calculatable rhs) {
+        return getResultOfAddSubtractOperation(lhs, rhs, lhs.getValue() + rhs.getValue());
     }
 
-    private Literal subtract(Literal lhs, Literal rhs) {
-        if (lhs instanceof PixelLiteral && rhs instanceof PixelLiteral) {
-            return new PixelLiteral(((PixelLiteral) lhs).value - ((PixelLiteral) rhs).value);
-        }
-        if (lhs instanceof PercentageLiteral && rhs instanceof PercentageLiteral) {
-            return new PercentageLiteral(((PercentageLiteral) lhs).value - ((PercentageLiteral) rhs).value);
-        }
-
-        throw new UnsupportedOperationException();
+    private Literal subtract(Calculatable lhs, Calculatable rhs) {
+        return getResultOfAddSubtractOperation(lhs, rhs, lhs.getValue() - rhs.getValue());
     }
 
-
-    private Literal multiply(Literal lhs, Literal rhs) {
+    private Literal multiply(Calculatable lhs, Calculatable rhs) {
         if (lhs instanceof ScalarLiteral) {
-            return getResultOfMultiplication((ScalarLiteral) lhs, rhs);
+            return getResultOfMultiplyOperation(rhs, lhs.getValue() * rhs.getValue());
         }
         if (rhs instanceof ScalarLiteral) {
-            return getResultOfMultiplication((ScalarLiteral) rhs, lhs);
+            return getResultOfMultiplyOperation(lhs, lhs.getValue() * rhs.getValue());
         }
-
         throw new UnsupportedOperationException();
     }
 
-    private Literal getResultOfMultiplication(ScalarLiteral lhs, Literal rhs) {
-        if (rhs instanceof PixelLiteral) {
-            return new PixelLiteral(lhs.value * ((PixelLiteral) rhs).value);
+    private Literal getResultOfMultiplyOperation(Calculatable operand, int result) {
+        if (operand instanceof PixelLiteral) {
+            return new PixelLiteral(result);
         }
-        if (rhs instanceof PercentageLiteral) {
-            return new PercentageLiteral(lhs.value * ((PercentageLiteral) rhs).value);
+        if (operand instanceof PercentageLiteral) {
+            return new PercentageLiteral(result);
         }
+        throw new UnsupportedOperationException();
+    }
 
+    private Literal getResultOfAddSubtractOperation(Calculatable lhs, Calculatable rhs, int result) {
+        if (lhs instanceof PixelLiteral && rhs instanceof PixelLiteral) {
+            return new PixelLiteral(result);
+        }
+        if (lhs instanceof PercentageLiteral && rhs instanceof PercentageLiteral) {
+            return new PercentageLiteral(result);
+        }
         throw new UnsupportedOperationException();
     }
 }

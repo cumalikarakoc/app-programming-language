@@ -4,7 +4,7 @@ import nl.han.ica.icss.ast.Literal;
 
 import java.util.Objects;
 
-public class PercentageLiteral extends Literal {
+public class PercentageLiteral extends Literal  implements Calculatable{
     public int value;
 
     public PercentageLiteral(int value) {
@@ -30,5 +30,10 @@ public class PercentageLiteral extends Literal {
     @Override
     public int hashCode() {
         return Objects.hash(value);
+    }
+
+    @Override
+    public int getValue() {
+        return value;
     }
 }

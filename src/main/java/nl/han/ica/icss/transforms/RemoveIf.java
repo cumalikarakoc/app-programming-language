@@ -35,7 +35,8 @@ public class RemoveIf implements Transform {
         for (int i = 0; i < nodes.size(); i++) {
             if (nodes.get(i) instanceof Declaration) {
                 ((Stylerule) styleRule).body.add(nodes.get(i));
-            } else {
+            }
+            if (nodes.get(i) instanceof IfClause) {
                 evaluateIf(styleRule, ifClause, nodes.get(i));
             }
         }
