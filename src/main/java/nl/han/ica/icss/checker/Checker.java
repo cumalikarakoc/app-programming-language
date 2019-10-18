@@ -112,7 +112,7 @@ public class Checker {
         }
         if (expression instanceof VariableReference) {
             if (getExpressionTypeOfVariable((VariableReference) expression) == ExpressionType.UNDEFINED) {
-                expression.setError("Variable " + ((VariableReference) expression).name + " is not defined.");
+                expression.setError("Variable \"" + ((VariableReference) expression).name + "\" is not defined.");
             }
         }
     }
@@ -131,7 +131,7 @@ public class Checker {
     private void validatePropertyValueTypes(PropertyName property, Expression expression) {
         ExpressionType expressionType = getExpressionType(expression);
         if (!isExpressionCompatibleWithProperty(property, expressionType)) {
-            property.setError("Property " + property.name + " is incompatible with type " + expressionType);
+            property.setError("Property \"" + property.name + "\" is incompatible with the type " + expressionType);
         }
     }
 

@@ -47,7 +47,7 @@ tagSelector: (idSelector | classSelector | elementSelector);
 idSelector: ID_IDENT;
 classSelector: CLASS_IDENT;
 elementSelector: LOWER_IDENT;
-selectorBody: (varAssignment+|) (declaration+|) ifClause* (declaration+|) ;
+selectorBody: varAssignment* declaration* ifClause*;
 declaration: propName COLON propVal SEMICOLON;
 ifClause: IF BOX_BRACKET_OPEN expression BOX_BRACKET_CLOSE OPEN_BRACE selectorBody CLOSE_BRACE;
 propVal: expression | operation;

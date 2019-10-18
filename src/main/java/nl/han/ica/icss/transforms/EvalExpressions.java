@@ -118,21 +118,18 @@ public class EvalExpressions implements Transform {
     }
 
     private Literal multiply(Calculatable lhs, Calculatable rhs) {
-        if (lhs instanceof ScalarLiteral) {
-            return getResultOfMultiplyOperation(rhs, lhs.getValue() * rhs.getValue());
-        }
-        if (rhs instanceof ScalarLiteral) {
-            return getResultOfMultiplyOperation(lhs, lhs.getValue() * rhs.getValue());
-        }
-        throw new UnsupportedOperationException();
+        return getResultOfMultiplyOperation(lhs, rhs, lhs.getValue() * rhs.getValue());
     }
 
-    private Literal getResultOfMultiplyOperation(Calculatable nonScalarOperand, int result) {
-        if (nonScalarOperand instanceof PixelLiteral) {
+    private Literal getResultOfMultiplyOperation(Calculatable lhs, Calculatable rhs, int result) {
+        if (lhs instanceof PixelLiteral || rhs instanceof PixelLiteral) {
             return new PixelLiteral(result);
         }
-        if (nonScalarOperand instanceof PercentageLiteral) {
+        if (lhs instanceof PercentageLiteral || rhs instanceof PercentageLiteral) {
             return new PercentageLiteral(result);
+        }
+        if (lhs instanceof ScalarLiteral && rhs instanceof ScalarLiteral) {
+            return new ScalarLiteral(result);
         }
         throw new UnsupportedOperationException();
     }
@@ -143,6 +140,9 @@ public class EvalExpressions implements Transform {
         }
         if (lhs instanceof PercentageLiteral && rhs instanceof PercentageLiteral) {
             return new PercentageLiteral(result);
+        }
+        if (lhs instanceof ScalarLiteral && rhs instanceof ScalarLiteral) {
+            return new ScalarLiteral(result);
         }
         throw new UnsupportedOperationException();
     }
