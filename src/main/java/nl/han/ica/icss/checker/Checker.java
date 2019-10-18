@@ -82,12 +82,12 @@ public class Checker {
 
         if (operation instanceof AddOperation || operation instanceof SubtractOperation) {
             if (lhsType != rhsType) {
-                operation.setError("The operands must be the same type.");
+                operation.setError("The operands of add/subtract operation must be the same type.");
             }
         }
         if (operation instanceof MultiplyOperation) {
             if (!(lhsType == ExpressionType.SCALAR || rhsType == ExpressionType.SCALAR)) {
-                operation.setError("One of the operands must be the type SCALAR.");
+                operation.setError("At least one of the operands of multiply operation must be the type " + ExpressionType.SCALAR + ".");
             }
         }
 
@@ -111,7 +111,7 @@ public class Checker {
             validateVariables(((Operation) expression).lhs);
         }
         if (expression instanceof VariableReference) {
-            if (getExpressionTypeOfVariable((VariableReference) expression) == ExpressionType.UNDEFINED) {
+            if (getExpressionTypeOfVariable((VariableReference) expression) == null) {
                 expression.setError("Variable \"" + ((VariableReference) expression).name + "\" is not defined.");
             }
         }
@@ -131,7 +131,7 @@ public class Checker {
     private void validatePropertyValueTypes(PropertyName property, Expression expression) {
         ExpressionType expressionType = getExpressionType(expression);
         if (!isExpressionCompatibleWithProperty(property, expressionType)) {
-            property.setError("Property \"" + property.name + "\" is incompatible with the type " + expressionType);
+            property.setError("Property \"" + property.name + "\" is incompatible with the type " + expressionType + ".");
         }
     }
 
@@ -178,7 +178,7 @@ public class Checker {
         if (variableTypes.getFirst().containsKey(reference.name)) {
             return variableTypes.getFirst().get(reference.name);
         }
-        return ExpressionType.UNDEFINED;
+        return null;
     }
 
     private ExpressionType mapToExpressionType(ASTNode node) {
