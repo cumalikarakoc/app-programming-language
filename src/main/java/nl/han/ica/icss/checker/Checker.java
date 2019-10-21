@@ -12,8 +12,6 @@ import nl.han.ica.icss.ast.types.*;
 public class Checker {
 
     private LinkedList<Map<String, ExpressionType>> variableTypes = new LinkedList<>();
-    private int currentStyleRule = 0;
-    private int scopeLevel = 0;
     private Map<ExpressionType, List<String>> properties = new HashMap<>();
 
 
@@ -28,24 +26,28 @@ public class Checker {
 
     public void check(AST ast) {
         for (ASTNode node : ast.root.body) {
+
+            //global
+            variableTypes.add(new HashMap<>());
+
             if (node instanceof VariableAssignment) {
                 validateStyleSheet(node);
                 continue;
             }
 
             if (node instanceof Stylerule) {
-                scopeLevel++;
-                currentStyleRule = scopeLevel;
+                variableTypes.add(new HashMap<>());
                 for (ASTNode styleRule : ((Stylerule) node).body) {
                     validateStyleSheet(styleRule);
                 }
+                variableTypes.removeLast();
             }
         }
     }
 
     private void validateStyleSheet(ASTNode node) {
         if (node instanceof VariableAssignment) {
-            setVariableTypes((VariableAssignment) node);
+            variableTypes.getLast().put(((VariableAssignment) node).name.name, getExpressionType(((VariableAssignment) node).expression));
             validateVariables(((VariableAssignment) node).expression);
             validateOperands(((VariableAssignment) node).expression);
             return;
@@ -53,6 +55,7 @@ public class Checker {
 
         if (node instanceof IfClause) {
             validateIfClauseConditions(((IfClause) node).conditionalExpression, (IfClause) node);
+            variableTypes.removeLast();
             return;
         }
 
@@ -95,10 +98,10 @@ public class Checker {
 
     private void validateIfClauseConditions(Expression expression, IfClause ifClause) {
         if (getExpressionType(expression) != ExpressionType.BOOL) {
-            ifClause.conditionalExpression.setError("The condition must be the type boolean.");
+            ifClause.conditionalExpression.setError("The condition must be the type " + ExpressionType.BOOL + ".");
         }
 
-        scopeLevel++;
+        variableTypes.add(new HashMap<>());
 
         for (ASTNode node : ifClause.body) {
             validateStyleSheet(node);
@@ -115,17 +118,6 @@ public class Checker {
                 expression.setError("Variable \"" + ((VariableReference) expression).name + "\" is not defined.");
             }
         }
-    }
-
-    private void setVariableTypes(VariableAssignment assignment) {
-        Map<String, ExpressionType> variables;
-        if (scopeLevel < variableTypes.size()) {
-            variables = variableTypes.get(scopeLevel);
-        } else {
-            variables = new HashMap<>();
-            variableTypes.add(variables);
-        }
-        variables.put(assignment.name.name, getExpressionType(assignment.expression));
     }
 
     private void validatePropertyValueTypes(PropertyName property, Expression expression) {
@@ -168,15 +160,10 @@ public class Checker {
     }
 
     private ExpressionType getExpressionTypeOfVariable(VariableReference reference) {
-        int currentScope = scopeLevel < variableTypes.size() ? scopeLevel : variableTypes.size() - 1;
-        for (int i = currentScope; i >= currentStyleRule; i--) {
+        for (int i = variableTypes.size() - 1; i >= 0; i--) {
             if (variableTypes.get(i).containsKey(reference.name)) {
                 return variableTypes.get(i).get(reference.name);
             }
-        }
-        // global
-        if (variableTypes.getFirst().containsKey(reference.name)) {
-            return variableTypes.getFirst().get(reference.name);
         }
         return null;
     }

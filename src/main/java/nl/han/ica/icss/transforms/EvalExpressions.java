@@ -14,8 +14,6 @@ import java.util.*;
 public class EvalExpressions implements Transform {
 
     private LinkedList<Map<String, Literal>> variableValues = new LinkedList<>();
-    private int currentStyleRule = 0;
-    private int scopeLevel = 0;
 
     public EvalExpressions() {
     }
@@ -23,23 +21,27 @@ public class EvalExpressions implements Transform {
     @Override
     public void apply(AST ast) {
         for (ASTNode node : ast.root.body) {
+
+            //global
+            variableValues.add(new HashMap<>());
+
             if (node instanceof VariableAssignment) {
                 transformExpression(node);
                 continue;
             }
             if (node instanceof Stylerule) {
-                scopeLevel++;
-                currentStyleRule = scopeLevel;
+                variableValues.add(new HashMap<>());
                 for (ASTNode styleRule : ((Stylerule) node).body) {
                     transformExpression(styleRule);
                 }
+                variableValues.removeLast();
             }
         }
     }
 
     private void transformExpression(ASTNode node) {
         if (node instanceof VariableAssignment) {
-            setVariableValues((VariableAssignment) node);
+            variableValues.getLast().put(((VariableAssignment) node).name.name, convertExpressionToLiteral(((VariableAssignment) node).expression));
         }
 
         if (node instanceof Declaration) {
@@ -50,23 +52,14 @@ public class EvalExpressions implements Transform {
         if (node instanceof IfClause) {
             ((IfClause) node).conditionalExpression = convertExpressionToLiteral(((IfClause) node).conditionalExpression);
 
-            scopeLevel++;
+            variableValues.add(new HashMap<>());
 
             for (ASTNode ifClauseDeclaration : ((IfClause) node).body) {
                 transformExpression(ifClauseDeclaration);
             }
-        }
-    }
 
-    private void setVariableValues(VariableAssignment assignment) {
-        Map<String, Literal> variables;
-        if (scopeLevel < variableValues.size()) {
-            variables = variableValues.get(scopeLevel);
-        } else {
-            variables = new HashMap<>();
-            variableValues.add(variables);
+            variableValues.removeLast();
         }
-        variables.put(assignment.name.name, convertExpressionToLiteral(assignment.expression));
     }
 
     private Literal convertExpressionToLiteral(Expression expression) {
@@ -75,19 +68,20 @@ public class EvalExpressions implements Transform {
         }
 
         if (expression instanceof VariableReference) {
-            int currentScope = scopeLevel < variableValues.size() ? scopeLevel : variableValues.size() - 1;
-            for (int i = currentScope; i >= currentStyleRule; i--) {
-                if (variableValues.get(i).containsKey(((VariableReference) expression).name)) {
-                    return variableValues.get(i).get(((VariableReference) expression).name);
-                }
-            }
-
-            //global
-            return variableValues.getFirst().get(((VariableReference) expression).name);
+            return getLiteralOfVariable(expression);
         }
 
         if (expression instanceof Operation) {
             return getLiteralOfOperation(expression);
+        }
+        return null;
+    }
+
+    private Literal getLiteralOfVariable(Expression expression) {
+        for (int i = variableValues.size() - 1; i >= 0; i--) {
+            if (variableValues.get(i).containsKey(((VariableReference) expression).name)) {
+                return variableValues.get(i).get(((VariableReference) expression).name);
+            }
         }
         return null;
     }
