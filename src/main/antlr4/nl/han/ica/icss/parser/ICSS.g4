@@ -39,7 +39,7 @@ MUL: '*';
 ASSIGNMENT_OPERATOR: ':=';
 
 //--- PARSER: ---
-stylesheet:varAssignment* styleRule*;
+stylesheet:(varAssignment | styleRule)*;
 varAssignment: varName ASSIGNMENT_OPERATOR (expression | operation) SEMICOLON;
 varName: CAPITAL_IDENT;
 styleRule: tagSelector OPEN_BRACE selectorBody CLOSE_BRACE;

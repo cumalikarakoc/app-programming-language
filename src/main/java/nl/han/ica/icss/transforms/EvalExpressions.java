@@ -16,32 +16,40 @@ public class EvalExpressions implements Transform {
     private LinkedList<Map<String, Literal>> variableValues = new LinkedList<>();
 
     public EvalExpressions() {
+        variableValues.add(new HashMap<>());
     }
 
     @Override
     public void apply(AST ast) {
+        // global variables
         for (ASTNode node : ast.root.body) {
-
-            //global
-            variableValues.add(new HashMap<>());
-
             if (node instanceof VariableAssignment) {
-                transformExpression(node);
-                continue;
+                evaluateElement(node);
             }
-            if (node instanceof Stylerule) {
-                variableValues.add(new HashMap<>());
-                for (ASTNode styleRule : ((Stylerule) node).body) {
-                    transformExpression(styleRule);
-                }
-                variableValues.removeLast();
-            }
+        }
+
+        evaluateBody(ast.root.body);
+    }
+
+    private void evaluateBody(List<ASTNode> body) {
+        for (ASTNode styleRule : body) {
+            evaluateElement(styleRule);
         }
     }
 
-    private void transformExpression(ASTNode node) {
+    private void evaluateElement(ASTNode node) {
+        if (node instanceof Stylerule) {
+            variableValues.add(new HashMap<>());
+
+            evaluateBody(((Stylerule) node).body);
+
+            variableValues.removeLast();
+            return;
+        }
+
         if (node instanceof VariableAssignment) {
             variableValues.getLast().put(((VariableAssignment) node).name.name, convertExpressionToLiteral(((VariableAssignment) node).expression));
+            return;
         }
 
         if (node instanceof Declaration) {
@@ -54,9 +62,7 @@ public class EvalExpressions implements Transform {
 
             variableValues.add(new HashMap<>());
 
-            for (ASTNode ifClauseDeclaration : ((IfClause) node).body) {
-                transformExpression(ifClauseDeclaration);
-            }
+            evaluateBody(((IfClause) node).body);
 
             variableValues.removeLast();
         }

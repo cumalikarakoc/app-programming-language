@@ -12,40 +12,51 @@ import nl.han.ica.icss.ast.types.*;
 public class Checker {
 
     private LinkedList<Map<String, ExpressionType>> variableTypes = new LinkedList<>();
-    private Map<ExpressionType, List<String>> properties = new HashMap<>();
+    private Map<ExpressionType, List<String>> propertyTypes = new HashMap<>();
+    private List<String> supportedProperties = new ArrayList<>();
 
 
     public Checker() {
+        variableTypes.add(new HashMap<>());
+
         List<String> percentagePixelProperties = new ArrayList<>(List.of("width", "height"));
         List<String> colorProperties = new ArrayList<>(List.of("color", "background-color"));
 
-        properties.put(ExpressionType.PERCENTAGE, percentagePixelProperties);
-        properties.put(ExpressionType.PIXEL, percentagePixelProperties);
-        properties.put(ExpressionType.COLOR, colorProperties);
+        supportedProperties.addAll(percentagePixelProperties);
+        supportedProperties.addAll(colorProperties);
+
+        propertyTypes.put(ExpressionType.PERCENTAGE, percentagePixelProperties);
+        propertyTypes.put(ExpressionType.PIXEL, percentagePixelProperties);
+        propertyTypes.put(ExpressionType.COLOR, colorProperties);
     }
 
     public void check(AST ast) {
+
+        // first handle all global variables since they may appear between the style rules
         for (ASTNode node : ast.root.body) {
-
-            //global
-            variableTypes.add(new HashMap<>());
-
             if (node instanceof VariableAssignment) {
-                validateStyleSheet(node);
-                continue;
+                validateElement(node);
             }
+        }
 
-            if (node instanceof Stylerule) {
-                variableTypes.add(new HashMap<>());
-                for (ASTNode styleRule : ((Stylerule) node).body) {
-                    validateStyleSheet(styleRule);
-                }
-                variableTypes.removeLast();
-            }
+        validateBody(ast.root.body);
+    }
+
+    private void validateBody(List<ASTNode> nodes) {
+        for (ASTNode node : nodes) {
+            validateElement(node);
         }
     }
 
-    private void validateStyleSheet(ASTNode node) {
+    private void validateElement(ASTNode node) {
+        if (node instanceof Stylerule) {
+            variableTypes.add(new HashMap<>());
+
+            validateBody(((Stylerule) node).body);
+
+            variableTypes.removeLast();
+        }
+
         if (node instanceof VariableAssignment) {
             variableTypes.getLast().put(((VariableAssignment) node).name.name, getExpressionType(((VariableAssignment) node).expression));
             validateVariables(((VariableAssignment) node).expression);
@@ -62,7 +73,7 @@ public class Checker {
         if (node instanceof Declaration) {
             Expression expression = ((Declaration) node).expression;
             validateVariables(expression);
-            validatePropertyValueTypes(((Declaration) node).property, expression);
+            validateProperties(((Declaration) node).property, expression);
             validateOperands(expression);
         }
     }
@@ -98,14 +109,15 @@ public class Checker {
 
     private void validateIfClauseConditions(Expression expression, IfClause ifClause) {
         if (getExpressionType(expression) != ExpressionType.BOOL) {
-            ifClause.conditionalExpression.setError("The condition must be the type " + ExpressionType.BOOL + ".");
+            expression.setError("The condition must be the type " + ExpressionType.BOOL + ".");
         }
+
+        // overwrite the error if expression is an undefined variable
+        validateVariables(expression);
 
         variableTypes.add(new HashMap<>());
 
-        for (ASTNode node : ifClause.body) {
-            validateStyleSheet(node);
-        }
+        validateBody(ifClause.body);
     }
 
     private void validateVariables(Expression expression) {
@@ -113,6 +125,7 @@ public class Checker {
             validateVariables(((Operation) expression).rhs);
             validateVariables(((Operation) expression).lhs);
         }
+
         if (expression instanceof VariableReference) {
             if (getExpressionTypeOfVariable((VariableReference) expression) == null) {
                 expression.setError("Variable \"" + ((VariableReference) expression).name + "\" is not defined.");
@@ -120,7 +133,12 @@ public class Checker {
         }
     }
 
-    private void validatePropertyValueTypes(PropertyName property, Expression expression) {
+    private void validateProperties(PropertyName property, Expression expression) {
+        if (!supportedProperties.contains(property.name)) {
+            property.setError("Property \"" + property.name + "\" is not supported.");
+            return;
+        }
+
         ExpressionType expressionType = getExpressionType(expression);
         if (!isExpressionCompatibleWithProperty(property, expressionType)) {
             property.setError("Property \"" + property.name + "\" is incompatible with the type " + expressionType + ".");
@@ -128,7 +146,7 @@ public class Checker {
     }
 
     private boolean isExpressionCompatibleWithProperty(PropertyName property, ExpressionType expressionType) {
-        return properties.get(expressionType) != null && properties.get(expressionType).contains(property.name);
+        return propertyTypes.get(expressionType) != null && propertyTypes.get(expressionType).contains(property.name);
     }
 
     private ExpressionType getExpressionType(Expression expression) {
