@@ -55,6 +55,7 @@ public class Checker {
             validateBody(((Stylerule) node).body);
 
             variableTypes.removeLast();
+            return;
         }
 
         if (node instanceof VariableAssignment) {

@@ -6,8 +6,7 @@ import nl.han.ica.icss.ast.literals.PercentageLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
 import nl.han.ica.icss.ast.literals.ScalarLiteral;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
 
 public class Generator {
 
@@ -25,28 +24,28 @@ public class Generator {
     }
 
     private String decorateWithDeclarations(Stylerule stylerule) {
-        Map<String, String> declarations = overWriteDuplicateDeclarations(stylerule);
+        LinkedList<Declaration> declarations = overWriteDuplicateDeclarations(stylerule);
 
         StringBuilder sb = new StringBuilder();
-        for (String propertyName : declarations.keySet()) {
+        for (Declaration declaration : declarations) {
             sb.append("\t")
-                    .append(propertyName)
+                    .append(declaration.property.name)
                     .append(": ")
-                    .append(declarations.get(propertyName))
+                    .append(getLiteralValue(declaration.expression))
                     .append(";").append("\n");
         }
         return sb.toString();
     }
 
-    private Map<String, String> overWriteDuplicateDeclarations(Stylerule stylerule) {
-        Map<String, String> declarations = new HashMap<>();
+    private LinkedList<Declaration> overWriteDuplicateDeclarations(Stylerule stylerule) {
+        LinkedList<Declaration> declarations = new LinkedList<>();
         for (ASTNode declaration : stylerule.body) {
             if (declaration instanceof Declaration) {
                 String propertyName = ((Declaration) declaration).property.name;
-                String propertyValue = getLiteralValue(((Declaration) declaration).expression);
 
-                declarations.remove(propertyName);
-                declarations.put(propertyName, propertyValue);
+                declarations.removeIf(d -> d.property.name.equals(propertyName));
+
+                declarations.add((Declaration) declaration);
             }
         }
         return declarations;
