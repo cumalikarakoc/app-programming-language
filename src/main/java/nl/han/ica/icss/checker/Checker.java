@@ -39,7 +39,16 @@ public class Checker {
             }
         }
 
-        validateBody(ast.root.body);
+        // style rules
+        for (ASTNode node : ast.root.body) {
+            if (node instanceof Stylerule) {
+                variableTypes.add(new HashMap<>());
+
+                validateBody(((Stylerule) node).body);
+
+                variableTypes.removeLast();
+            }
+        }
     }
 
     private void validateBody(List<ASTNode> nodes) {
@@ -49,15 +58,6 @@ public class Checker {
     }
 
     private void validateElement(ASTNode node) {
-        if (node instanceof Stylerule) {
-            variableTypes.add(new HashMap<>());
-
-            validateBody(((Stylerule) node).body);
-
-            variableTypes.removeLast();
-            return;
-        }
-
         if (node instanceof VariableAssignment) {
             variableTypes.getLast().put(((VariableAssignment) node).name.name, getExpressionType(((VariableAssignment) node).expression));
             validateVariables(((VariableAssignment) node).expression);

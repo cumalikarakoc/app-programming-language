@@ -28,7 +28,16 @@ public class EvalExpressions implements Transform {
             }
         }
 
-        evaluateBody(ast.root.body);
+        // style rules
+        for (ASTNode node : ast.root.body) {
+            if (node instanceof Stylerule) {
+                variableValues.add(new HashMap<>());
+
+                evaluateBody(((Stylerule) node).body);
+
+                variableValues.removeLast();
+            }
+        }
     }
 
     private void evaluateBody(List<ASTNode> body) {
@@ -38,15 +47,6 @@ public class EvalExpressions implements Transform {
     }
 
     private void evaluateElement(ASTNode node) {
-        if (node instanceof Stylerule) {
-            variableValues.add(new HashMap<>());
-
-            evaluateBody(((Stylerule) node).body);
-
-            variableValues.removeLast();
-            return;
-        }
-
         if (node instanceof VariableAssignment) {
             variableValues.getLast().put(((VariableAssignment) node).name.name, convertExpressionToLiteral(((VariableAssignment) node).expression));
             return;
